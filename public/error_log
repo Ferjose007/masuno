@@ -1,0 +1,272 @@
+[11-Jun-2025 22:34:35 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[11-Jun-2025 22:34:38 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[11-Jun-2025 22:34:42 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[11-Jun-2025 22:34:55 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[11-Jun-2025 22:39:36 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[11-Jun-2025 22:39:49 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[11-Jun-2025 22:41:04 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[11-Jun-2025 22:41:06 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[11-Jun-2025 22:41:09 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[11-Jun-2025 22:42:29 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\AuthController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[11-Jun-2025 22:51:28 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 04:57:05 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 04:57:17 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 04:57:23 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 04:58:15 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 04:58:24 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 04:58:31 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 04:58:40 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 04:59:26 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 05:16:21 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 05:16:34 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 05:21:56 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 05:22:03 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 05:22:12 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 05:22:21 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 05:22:42 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\AuthController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 05:30:47 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 05:30:52 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 05:31:24 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\AuthController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 05:32:24 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\AuthController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(64): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 05:33:16 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\AuthController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(68): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 05:35:55 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\AuthController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(68): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 13:58:21 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(68): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 13:58:31 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(68): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[13-Jun-2025 16:57:53 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(68): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[14-Jun-2025 04:01:47 UTC] PHP Fatal error:  Uncaught Error: Class "App\Controllers\HomeController" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(68): Core\Router->run()
+#1 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[14-Jun-2025 04:17:57 UTC] PHP Fatal error:  Uncaught Error: Class "App\Models\User" not found in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Controllers/AuthController.php:52
+Stack trace:
+#0 [internal function]: App\Controllers\AuthController->login()
+#1 /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php(39): call_user_func()
+#2 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(68): Core\Router->run()
+#3 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Controllers/AuthController.php on line 52
+[14-Jun-2025 04:20:00 UTC] PHP Warning:  require(/home/masunoestilistas/citas.masunoestilistas.com/masuno/core/../app/views/auth/login.php): Failed to open stream: No such file or directory in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Controller.php on line 7
+[14-Jun-2025 04:20:00 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/masunoestilistas/citas.masunoestilistas.com/masuno/core/../app/views/auth/login.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Controller.php:7
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Controllers/AuthController.php(45): Core\Controller->view()
+#1 [internal function]: App\Controllers\AuthController->showLogin()
+#2 /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php(39): call_user_func()
+#3 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(68): Core\Router->run()
+#4 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Controller.php on line 7
+[14-Jun-2025 04:20:06 UTC] PHP Warning:  require(/home/masunoestilistas/citas.masunoestilistas.com/masuno/core/../app/views/auth/login.php): Failed to open stream: No such file or directory in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Controller.php on line 7
+[14-Jun-2025 04:20:06 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/masunoestilistas/citas.masunoestilistas.com/masuno/core/../app/views/auth/login.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Controller.php:7
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Controllers/AuthController.php(45): Core\Controller->view()
+#1 [internal function]: App\Controllers\AuthController->showLogin()
+#2 /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php(39): call_user_func()
+#3 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(68): Core\Router->run()
+#4 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Controller.php on line 7
+[14-Jun-2025 04:20:07 UTC] PHP Warning:  require(/home/masunoestilistas/citas.masunoestilistas.com/masuno/core/../app/views/home/index.php): Failed to open stream: No such file or directory in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Controller.php on line 7
+[14-Jun-2025 04:20:07 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/masunoestilistas/citas.masunoestilistas.com/masuno/core/../app/views/home/index.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Controller.php:7
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Controllers/HomeController.php(8): Core\Controller->view()
+#1 [internal function]: App\Controllers\HomeController->index()
+#2 /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php(39): call_user_func()
+#3 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(68): Core\Router->run()
+#4 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Controller.php on line 7
+[14-Jun-2025 04:20:09 UTC] PHP Warning:  require(/home/masunoestilistas/citas.masunoestilistas.com/masuno/core/../app/views/home/index.php): Failed to open stream: No such file or directory in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Controller.php on line 7
+[14-Jun-2025 04:20:09 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/masunoestilistas/citas.masunoestilistas.com/masuno/core/../app/views/home/index.php' (include_path='.:/opt/alt/php82/usr/share/pear:/opt/alt/php82/usr/share/php:/usr/share/pear:/usr/share/php') in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Controller.php:7
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Controllers/HomeController.php(8): Core\Controller->view()
+#1 [internal function]: App\Controllers\HomeController->index()
+#2 /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php(39): call_user_func()
+#3 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(68): Core\Router->run()
+#4 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Controller.php on line 7
+[15-Jun-2025 19:04:03 UTC] PHP Fatal error:  Uncaught TypeError: call_user_func(): Argument #1 ($callback) must be a valid callback, class App\Controllers\ClientController does not have a method "edit" in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php(39): call_user_func()
+#1 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(71): Core\Router->run()
+#2 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[15-Jun-2025 19:10:31 UTC] PHP Fatal error:  Uncaught TypeError: call_user_func(): Argument #1 ($callback) must be a valid callback, class App\Controllers\ClientController does not have a method "index" in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php(39): call_user_func()
+#1 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(71): Core\Router->run()
+#2 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[15-Jun-2025 19:10:46 UTC] PHP Fatal error:  Uncaught TypeError: call_user_func(): Argument #1 ($callback) must be a valid callback, class App\Controllers\ClientController does not have a method "index" in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php(39): call_user_func()
+#1 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(71): Core\Router->run()
+#2 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[15-Jun-2025 19:14:11 UTC] PHP Fatal error:  Uncaught TypeError: call_user_func(): Argument #1 ($callback) must be a valid callback, class App\Controllers\ClientController does not have a method "index" in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php(39): call_user_func()
+#1 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(71): Core\Router->run()
+#2 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[15-Jun-2025 19:15:58 UTC] PHP Fatal error:  Uncaught TypeError: call_user_func(): Argument #1 ($callback) must be a valid callback, class App\Controllers\ClientController does not have a method "edit" in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php:39
+Stack trace:
+#0 /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php(39): call_user_func()
+#1 /home/masunoestilistas/citas.masunoestilistas.com/masuno/public/index.php(71): Core\Router->run()
+#2 {main}
+  thrown in /home/masunoestilistas/citas.masunoestilistas.com/masuno/core/Router.php on line 39
+[15-Jun-2025 19:42:45 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Horario::$estilista_id is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Horario.php on line 39
+[15-Jun-2025 19:48:25 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Horario::$estilista_id is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Horario.php on line 39
+[15-Jun-2025 19:48:44 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Horario::$estilista_id is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Horario.php on line 39
+[15-Jun-2025 20:33:50 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Reserva::$cliente_nombre is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Reserva.php on line 84
+[15-Jun-2025 20:34:01 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Reserva::$cliente_nombre is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Reserva.php on line 84
+[15-Jun-2025 20:34:14 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Reserva::$cliente_nombre is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Reserva.php on line 84
+[15-Jun-2025 20:34:48 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Reserva::$cliente_nombre is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Reserva.php on line 84
+[15-Jun-2025 20:34:51 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Reserva::$cliente_nombre is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Reserva.php on line 84
+[15-Jun-2025 20:35:24 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Reserva::$cliente_nombre is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Reserva.php on line 84
+[15-Jun-2025 20:35:33 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Reserva::$cliente_nombre is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Reserva.php on line 84
+[15-Jun-2025 20:36:16 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Reserva::$cliente_nombre is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Reserva.php on line 84
+[15-Jun-2025 20:36:23 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Reserva::$cliente_nombre is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Reserva.php on line 84
+[15-Jun-2025 20:36:24 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Reserva::$cliente_nombre is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Reserva.php on line 84
+[15-Jun-2025 20:36:39 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Reserva::$cliente_nombre is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Reserva.php on line 84
+[15-Jun-2025 20:37:22 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Reserva::$cliente_nombre is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Reserva.php on line 84
+[15-Jun-2025 20:37:27 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Reserva::$cliente_nombre is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Reserva.php on line 84
+[15-Jun-2025 20:37:30 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Reserva::$cliente_nombre is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Reserva.php on line 84
+[15-Jun-2025 20:49:49 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Reserva::$cliente_nombre is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Reserva.php on line 84
+[15-Jun-2025 22:03:37 UTC] PHP Deprecated:  Creation of dynamic property App\Models\Reserva::$cliente_nombre is deprecated in /home/masunoestilistas/citas.masunoestilistas.com/masuno/app/Models/Reserva.php on line 84

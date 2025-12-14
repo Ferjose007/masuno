@@ -1,0 +1,17 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Si piden la raíz, carga index.php (sin parámetro url)
+  RewriteRule ^$ index.php [L]
+
+  # Si existe el archivo/carpeta, sirve directamente
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+
+  # Todo lo demás → index.php?url=ruta
+  RewriteRule ^(.+)$ index.php?url=$1 [L,QSA]
+  
+  AddDefaultCharset UTF-8
+
+</IfModule>
