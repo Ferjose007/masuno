@@ -8,6 +8,7 @@ class Servicio
 {
     public $id;
     public $nombre;
+    public  $descripcion;
     public $duracion_minutes;
     public $precio;
     public $creado_en;

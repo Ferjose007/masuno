@@ -6,6 +6,16 @@ error_reporting(E_ALL);
 
 session_start();
 
+// --- AGREGAR ESTO ---
+// Detectar automáticamente la URL base (http://localhost/tu-carpeta/public)
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+$host = $_SERVER['HTTP_HOST'];
+// Ajusta '/masuno/public' si tu carpeta local tiene otro nombre, 
+// o usa '/' si usas "php -S localhost:8000"
+$scriptName = dirname($_SERVER['SCRIPT_NAME']);
+define('BASE_URL', $protocol . "://" . $host . $scriptName);
+// --------------------
+
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../core/Router.php';
 require_once __DIR__ . '/../core/Controller.php';

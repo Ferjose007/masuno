@@ -41,7 +41,7 @@
                     <?php endforeach; ?>
                 </tbody>
             </table>
-            <a href="/masuno/public/index.php?url=Service/index"
+            <a href="<?= BASE_URL ?>/index.php?url=Service/index"
                 class="mt-4 inline-block text-indigo-600 hover:underline">
                 Ir a Gestión completa de Servicios →
             </a>
@@ -70,7 +70,7 @@
                     <?php endforeach; ?>
                 </tbody>
             </table>
-            <a href="/masuno/public/index.php?url=Horario/index"
+            <a href="<?= BASE_URL ?>/index.php?url=Horario/index"
                 class="mt-4 inline-block text-indigo-600 hover:underline">
                 Ver todos los Horarios →
             </a>
@@ -80,7 +80,7 @@
         <div class="mt-8 bg-white p-6 rounded-lg shadow">
             <h2 class="text-xl font-semibold mb-4">Clientes</h2>
             <p class="text-3xl font-bold mb-4"><?= count($clientes) ?></p>
-            <a href="/masuno/public/index.php?url=Client/index"
+            <a href="<?= BASE_URL ?>/index.php?url=Client/index"
                 class="inline-block text-indigo-600 hover:underline">
                 Ver todos los Clientes →
             </a>

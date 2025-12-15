@@ -1,8 +1,8 @@
 <aside class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg flex flex-col justify-between">
   <div class="p-6">
-    <img src="/assets/logo.png" alt="Masuno" class="h-12 mx-auto mb-6">
+    <img src="<?= BASE_URL ?>/assets/logo.png" alt="Masuno" class="h-12 mx-auto mb-6">
     <nav class="space-y-2">
-      <a href="/masuno/public/index.php?url=Stylist/dashboard"
+      <a href="<?= BASE_URL ?>/index.php?url=Stylist/dashboard"
          class="flex items-center px-4 py-2 rounded-lg hover:bg-indigo-100 hover:text-indigo-700">
         <!-- icono home -->
         <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -10,7 +10,7 @@
         </svg>
         Inicio
       </a>
-      <a href="/masuno/public/index.php?url=Stylist/appointments"
+      <a href="<?= BASE_URL ?>/index.php?url=Stylist/appointments"
          class="flex items-center px-4 py-2 rounded-lg hover:bg-indigo-100 hover:text-indigo-700">
         <!-- icono calendario -->
         <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -21,7 +21,7 @@
     </nav>
   </div>
   <div class="p-6">
-    <form action="/masuno/public/index.php" method="get">
+    <form action="<?= BASE_URL ?>/index.php" method="get">
       <input type="hidden" name="url" value="Auth/logout">
       <button type="submit"
               class="w-full text-center bg-red-600 text-white font-semibold py-2 rounded hover:bg-red-700 transition">

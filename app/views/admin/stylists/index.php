@@ -13,7 +13,7 @@
 <main class="flex-1 ml-64 p-8 overflow-auto">
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold">GestiÃ³n de Estilistas</h1>
-      <a href="/masuno/public/index.php?url=AdminStylist/create"
+      <a href="<?= BASE_URL ?>/index.php?url=AdminStylist/create"
          class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">
         Nuevo Estilista
       </a>
@@ -36,14 +36,14 @@
           <td class="border px-4 py-2"><?= htmlspecialchars($s->creado_en) ?></td>
           <td class="border px-4 py-2">
             <div class="flex justify-center space-x-2">
-              <a href="/masuno/public/index.php?url=AdminStylist/edit&id=<?= $s->id ?>"
+              <a href="<?= BASE_URL ?>/index.php?url=AdminStylist/edit&id=<?= $s->id ?>"
                  class="bg-indigo-600 text-white py-1 px-3 rounded hover:bg-indigo-700 transition">
                 Editar
               </a>
               <!-- now a button that triggers the modal -->
               <button
                 class="delete-button inline-block bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition ml-4"
-                data-url="/masuno/public/index.php?url=AdminStylist/delete&id=<?= $s->id ?>"
+                data-url="<?= BASE_URL ?>/index.php?url=AdminStylist/delete&id=<?= $s->id ?>"
               >
                 Eliminar
               </button>
@@ -55,7 +55,7 @@
     </table>
   </main>
 
-  <!-- Modal de confirmaci¨®n -->
+  <!-- Modal de confirmaciï¿½ï¿½n -->
   <div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
     <div class="bg-white rounded-lg shadow-lg p-6 w-80">
       <h2 class="text-xl font-semibold mb-4">Confirmar eliminaci&oacute;n</h2>

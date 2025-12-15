@@ -10,13 +10,13 @@
 
   <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center">
     <!-- Logo -->
-    <img src="/assets/logo.png" alt="Masuno" class="h-16 mx-auto mb-6">
+    <img src="<?= BASE_URL ?>/assets/logo.png" alt="Masuno" class="h-16 mx-auto mb-6">
 
     <p class="text-lg mb-8">
       Tu sistema de reservas para salón de belleza.
     </p>
 
-    <a href="/masuno/public/index.php?url=Auth/showLogin"
+    <a href="<?= BASE_URL ?>/index.php?url=Auth/showLogin"
        class="inline-block bg-red-600 text-white px-8 py-3 rounded-lg font-semibold
               hover:bg-red-700 transition">
       Iniciar Sesión

@@ -11,7 +11,7 @@
   <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
     <!-- Header con logo -->
     <div class="text-center py-6">
-      <img src="/assets/logo.png" alt="Masuno" class="h-12 mx-auto mb-4">
+      <img src="<?= BASE_URL ?>/assets/logo.png" alt="Masuno" class="h-12 mx-auto mb-4">
       <h1 class="text-2xl font-bold mb-2">Crear Cuenta</h1>
       <p class="text-sm text-gray-700">Únete a Masuno y reserva tus citas fácilmente</p>
     </div>
@@ -27,7 +27,7 @@
         </div>
       <?php endif; ?>
 
-      <form action="/Auth/register" method="post" class="space-y-6">
+      <form action="<?= BASE_URL ?>/Auth/register" method="post" class="space-y-6">
         <div>
           <label class="block text-black mb-1">Nombre completo</label>
           <input
@@ -85,7 +85,7 @@
 
         <p class="text-center text-black text-sm">
           ¿Ya tienes cuenta?
-          <a href="/masuno/public/index.php?url=Auth/showLogin" class="text-red-600 hover:underline">Inicia sesión</a>
+          <a href="<?= BASE_URL ?>/index.php?url=Auth/showLogin" class="text-red-600 hover:underline">Inicia sesión</a>
         </p>
       </form>
     </div>
