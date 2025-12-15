@@ -8,10 +8,10 @@
 </head>
 <body class="flex min-h-screen bg-white text-black">
 
-  <?php include __DIR__ . '/../partials/sidebar.php'; ?>
+  <?php include __DIR__ . '/../../partials/sidebar.php'; ?>
 
   <main class="flex-1 ml-64 p-8 overflow-auto">
-    <!-- T¨ªtulo y bot¨®n Nuevo Cliente -->
+    <!-- Tï¿½ï¿½tulo y botï¿½ï¿½n Nuevo Cliente -->
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold">Gesti&oacute;n de Clientes</h1>
       <a href="/masuno/public/index.php?url=Client/create"
@@ -62,7 +62,7 @@
     </table>
   </main>
 
-  <!-- Modal de confirmaci¨®n -->
+  <!-- Modal de confirmaciï¿½ï¿½n -->
   <div id="delete-modal"
        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
     <div class="bg-white rounded-lg shadow-lg p-6 w-80">

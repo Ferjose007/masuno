@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
 </head>
 <body class="flex min-h-screen bg-white text-black">
-  <?php include __DIR__ . '/../partials/sidebar.php'; ?>
+  <?php include __DIR__ . '/../../partials/sidebar.php'; ?>
 
   <main class="flex-1 ml-64 p-8 overflow-auto">
     <div class="bg-white w-full p-6 rounded-lg shadow">

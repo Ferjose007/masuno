@@ -8,7 +8,7 @@
 </head>
 <body class="flex min-h-screen bg-gray-100">
 
-  <?php include __DIR__ . '/../partials/sidebar.php'; ?>
+  <?php include __DIR__ . '/../../partials/sidebar.php'; ?>
 
   <main class="flex-1 ml-64 p-8 overflow-auto">
     <div class="flex items-center justify-between mb-6">

@@ -8,7 +8,7 @@
 </head>
 <body class="flex min-h-screen bg-gray-100 text-black">
 
-  <?php include __DIR__ . '/../partials/sidebar.php'; ?>
+  <?php include __DIR__ . '/../../partials/sidebar.php'; ?>
 
   <main class="flex-1 ml-64 p-8 overflow-auto">
     <div class="flex items-center justify-between mb-6">
@@ -38,12 +38,12 @@
           <td class="border px-4 py-2"><?= htmlspecialchars($h->estado_desc) ?></td>
           <td class="border px-4 py-2">
             <div class="flex justify-center space-x-2">
-              <!-- Editar (bot¨®n azul) -->
+              <!-- Editar (botï¿½ï¿½n azul) -->
               <a href="index.php?url=Horario/edit&id=<?= $h->id ?>"
                  class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition">
                 Editar
               </a>
-              <!-- Eliminar (bot¨®n rojo que abre modal) -->
+              <!-- Eliminar (botï¿½ï¿½n rojo que abre modal) -->
               <button
                 class="delete-button bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition"
                 data-url="index.php?url=Horario/delete&id=<?= $h->id ?>"
@@ -58,7 +58,7 @@
     </table>
   </main>
 
-  <!-- Modal de confirmaci¨®n -->
+  <!-- Modal de confirmaciï¿½ï¿½n -->
   <div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
     <div class="bg-white rounded-lg shadow-lg p-6 w-80">
       <h2 class="text-xl font-semibold mb-4">Confirmar eliminaci&oacute;n</h2>

@@ -25,14 +25,14 @@ class ServiceController extends Controller
     {
         $this->authorizeAdmin();
         $servicios = Servicio::all();
-        $this->view('services/index', compact('servicios'));
+        $this->view('admin/services/index', compact('servicios'));
     }
 
     // Mostrar formulario de creación
     public function create()
     {
         $this->authorizeAdmin();
-        $this->view('services/form', ['action' => 'store']);
+        $this->view('admin/services/form', ['action' => 'store']);
     }
 
     // Guardar nuevo servicio
@@ -54,7 +54,7 @@ class ServiceController extends Controller
             echo "Servicio no encontrado";
             return;
         }
-        $this->view('services/form', ['action' => 'update', 'servicio' => $servicio]);
+        $this->view('admin/services/form', ['action' => 'update', 'servicio' => $servicio]);
     }
 
     // Actualizar servicio

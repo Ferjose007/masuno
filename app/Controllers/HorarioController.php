@@ -26,7 +26,7 @@ class HorarioController extends Controller
     {
         $this->authorizeAdmin();
         $horarios = Horario::all();
-        $this->view('horarios/index', compact('horarios'));
+        $this->view('admin/horarios/index', compact('horarios'));
     }
 
     // Formulario de creación
@@ -35,7 +35,7 @@ class HorarioController extends Controller
         $this->authorizeAdmin();
         $estados    = EstadoHorario::all();
         $estilistas = User::getAllStylists();   // solo rol=estilista
-        $this->view('horarios/form', [
+        $this->view('admin/horarios/form', [
             'action'     => 'store',
             'estados'    => $estados,
             'estilistas' => $estilistas,
@@ -59,7 +59,7 @@ class HorarioController extends Controller
         $horario    = Horario::find($id);
         $estados    = EstadoHorario::all();
         $estilistas = User::getAllStylists();
-        $this->view('horarios/form', [
+        $this->view('admin/horarios/form', [
             'action'     => 'update',
             'horario'    => $horario,
             'estados'    => $estados,

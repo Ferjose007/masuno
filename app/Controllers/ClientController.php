@@ -29,7 +29,7 @@ class ClientController extends Controller
         $this->authorizeAdmin();
         // Obtiene todos los usuarios con rol 'cliente'
         $clientes = User::getAllClients();
-        $this->view('clients/index', compact('clientes'));
+        $this->view('admin/clients/index', compact('clientes'));
     }
 
     /**
@@ -40,7 +40,7 @@ class ClientController extends Controller
         $this->authorizeAdmin();
         $id = (int)($_GET['id'] ?? 0);
         $cliente = User::findById($id);
-        $this->view('clients/show', compact('cliente'));
+        $this->view('admin/clients/show', compact('cliente'));
     }
 
     /**
@@ -51,7 +51,7 @@ class ClientController extends Controller
         $this->authorizeAdmin();
         $errors = [];
         $old    = ['nombre'=>'', 'email'=>''];
-        $this->view('clients/form', compact('errors','old'));
+        $this->view('admin/clients/form', compact('errors','old'));
     }
 
     /**
@@ -82,7 +82,7 @@ class ClientController extends Controller
 
         if (!empty($errors)) {
             $old = ['nombre'=>$nombre,'email'=>$email];
-            $this->view('clients/form', compact('errors','old'));
+            $this->view('admin/clients/form', compact('errors','old'));
             return;
         }
 
@@ -118,7 +118,7 @@ class ClientController extends Controller
             'email'  => $cliente->email
         ];
 
-        $this->view('clients/form', compact('errors','old'));
+        $this->view('admin/clients/form', compact('errors','old'));
     }
 
     /**
@@ -142,7 +142,7 @@ class ClientController extends Controller
 
         if (!empty($errors)) {
             $old = ['id'=>$id,'nombre'=>$nombre,'email'=>$email];
-            $this->view('clients/form', compact('errors','old'));
+            $this->view('admin/clients/form', compact('errors','old'));
             return;
         }
 
