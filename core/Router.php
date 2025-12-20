@@ -1,41 +1,40 @@
 <?php
-
 namespace Core;
 
 class Router
 {
-    private $routes = [];
-
-    // Registrar ruta GET
-    public function get(string $uri, string $controllerAction)
-    {
-        $this->routes['GET'][$uri] = $controllerAction;
-    }
-
-    // Registrar ruta POST
-    public function post(string $uri, string $controllerAction)
-    {
-        $this->routes['POST'][$uri] = $controllerAction;
-    }
-
-    // Ejecutar el router
     public function run()
     {
-        // Obtiene la ruta desde ?url=... o '' si no existe
-        $uri    = $_GET['url'] ?? '';
-        $uri    = trim($uri, '/');
-        $method = $_SERVER['REQUEST_METHOD'];
+        // 1. Obtener la URL limpia
+        $url = isset($_GET['url']) ? $_GET['url'] : 'Admin/dashboard'; // Ruta por defecto
+        $url = rtrim($url, '/');
+        $url = explode('/', $url);
 
-        // Busca la acción en el array de rutas
-        $action = $this->routes[$method][$uri] ?? null;
-        if (!$action) {
-            http_response_code(404);
-            echo "Página no encontrada";
-            return;
+        // 2. Definir Controlador y Método
+        // Si la URL es "Client/toggle", $url[0] es Client
+        $controllerName = !empty($url[0]) ? ucfirst($url[0]) . 'Controller' : 'AdminController';
+        $methodName = !empty($url[1]) ? $url[1] : 'index';
+
+        // 3. Ruta completa del archivo
+        $controllerClass = "App\\Controllers\\" . $controllerName;
+
+        // 4. Verificar y Ejecutar
+        // Comprobamos si la clase existe (gracias al Autoload)
+        if (class_exists($controllerClass)) {
+            $controller = new $controllerClass();
+
+            // Comprobamos si el método existe dentro de la clase
+            if (method_exists($controller, $methodName)) {
+                
+                // Pasamos parámetros extra si los hay
+                $params = array_slice($url, 2);
+                call_user_func_array([$controller, $methodName], $params);
+                
+            } else {
+                echo "Error 404: El método '$methodName' no existe en '$controllerName'.";
+            }
+        } else {
+            echo "Error 404: El controlador '$controllerName' no existe.";
         }
-
-        list($controller, $method) = explode('@', $action);
-        $controller = "App\\Controllers\\{$controller}";
-        call_user_func([new $controller, $method]);
     }
 }

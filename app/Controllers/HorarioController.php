@@ -10,6 +10,7 @@ use App\Models\User;
 class HorarioController extends Controller
 {
     // Valida que sea admin
+    /*
     private function authorizeAdmin()
     {
         if (
@@ -20,6 +21,7 @@ class HorarioController extends Controller
             exit;
         }
     }
+    */
 
     // Listar todos los horarios
     public function index()

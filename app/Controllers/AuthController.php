@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Controllers;
 
 use Core\Controller;
@@ -7,90 +6,105 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
-    public function showRegister()
-    {
-        $this->view('auth/register');
-    }
-
-    public function register()
-    {
-        // Validaciones sencillas (puedes robustecerlas)
-        $nombre = trim($_POST['nombre'] ?? '');
-        $email  = trim($_POST['email'] ?? '');
-        $pass   = $_POST['password'] ?? '';
-        $pass2  = $_POST['password2'] ?? '';
-
-        $errors = [];
-        if (!$nombre || !$email || !$pass || !$pass2) {
-            $errors[] = "Todos los campos son obligatorios.";
-        }
-        if ($pass !== $pass2) {
-            $errors[] = "Las contraseñas no coinciden.";
-        }
-        if (User::findByEmail($email)) {
-            $errors[] = "El email ya está registrado.";
-        }
-
-        if ($errors) {
-            return $this->view('auth/register', ['errors' => $errors, 'old' => $_POST]);
-        }
-
-        User::create(['nombre' => $nombre, 'email' => $email, 'password' => $pass]);
-        header('Location: /masuno/public/index.php?url=Auth/showLogin');
-        exit;
-    }
-
+    // Muestra el formulario de Login
     public function showLogin()
     {
         $this->view('auth/login');
     }
 
+    // Procesa el Login
     public function login()
     {
+        // 1. Obtener datos
         $email = trim($_POST['email'] ?? '');
-        $pass  = $_POST['password'] ?? '';
-        $user  = User::findByEmail($email);
+        $password = $_POST['password'] ?? '';
 
-        if (!$user || !$user->verifyPassword($pass)) {
-            $error = "Credenciales inválidas.";
-            return $this->view('auth/login', ['error' => $error, 'old' => $_POST]);
-        }
+        // 2. Buscar usuario
+        $user = User::findByEmail($email);
 
-        // Crear sesión
-        session_regenerate_id();
-        $_SESSION['user'] = [
-            'id'     => $user->id,
-            'nombre' => $user->nombre,
-            'email'  => $user->email,
-            'rol'    => $user->rol
-        ];
+        // 3. Verificar contraseña y usuario existente
+        if ($user && password_verify($password, $user->password)) {
+            
+            // --- NUEVA VALIDACIÓN: Verificar si está activo ---
+            // Si activo es 0 (Falso), le impedimos el paso.
+            if (isset($user->activo) && $user->activo == 0) {
+                $error = "Tu cuenta ha sido desactivada. Por favor, contacta al administrador.";
+                $this->view('auth/login', compact('error'));
+                return;
+            }
+            // --------------------------------------------------
 
-        // Redirigir según rol
-        if ($user->rol === 'admin') {
-            header('Location: /masuno/public/index.php?url=Admin/dashboard');
-        } elseif ($user->rol === 'estilista') {
-            header('Location: /masuno/public/index.php?url=Stylist/dashboard');
+            // 4. Crear Sesión
+            $_SESSION['user'] = [
+                'id'     => $user->id,
+                'nombre' => $user->nombre,
+                'email'  => $user->email,
+                'rol'    => $user->rol
+            ];
+
+            // 5. Redireccionar según Rol
+            if ($user->rol === 'admin') {
+                header('Location: ' . BASE_URL . '/index.php?url=Admin/dashboard');
+            } elseif ($user->rol === 'estilista') {
+                header('Location: ' . BASE_URL . '/index.php?url=Stylist/index');
+            } else {
+                // Cliente
+                header('Location: ' . BASE_URL . '/index.php?url=Reservation/my');
+            }
+            exit;
+
         } else {
-            // cliente → enviamos al nuevo dashboard
-            header('Location: /masuno/public/index.php?url=Reservation/dashboard');
+            // Credenciales incorrectas
+            $error = "Correo o contraseña incorrectos.";
+            $this->view('auth/login', compact('error'));
         }
-        exit;
     }
 
-    public function logout()
+    // Muestra el formulario de Registro (Solo para Clientes públicos)
+    public function showRegister()
     {
-        // Si por algún motivo aún no se inició la sesión
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
+        $this->view('auth/register');
+    }
+
+    // Procesa el Registro de Clientes
+    public function register()
+    {
+        $data = $_POST;
+        
+        // Validaciones básicas
+        if ($data['password'] !== $data['confirm_password']) {
+            $error = "Las contraseñas no coinciden.";
+            $this->view('auth/register', compact('error'));
+            return;
         }
 
-        // Destruir toda la sesión
-        $_SESSION = [];
-        session_unset();
-        session_destroy();
+        // Verificar si email ya existe
+        if (User::findByEmail($data['email'])) {
+            $error = "El correo ya está registrado.";
+            $this->view('auth/register', compact('error'));
+            return;
+        }
 
-        // Redirigir al login DE FORMA ABSOLUTA
-        header('Location: /masuno/public/index.php?url=Auth/showLogin');
+        // Preparar datos
+        $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+        $data['rol'] = 'cliente'; // Registro público siempre es cliente
+        
+        // Crear
+        if (User::create($data)) {
+            // Redirigir al login con mensaje de éxito (opcional)
+            header('Location: ' . BASE_URL . '/index.php?url=Auth/showLogin');
+            exit;
+        } else {
+            $error = "Error al registrar el usuario.";
+            $this->view('auth/register', compact('error'));
+        }
+    }
+
+    // Cerrar Sesión
+    public function logout()
+    {
+        session_destroy();
+        header('Location: ' . BASE_URL . '/index.php?url=Auth/showLogin');
         exit;
     }
 }

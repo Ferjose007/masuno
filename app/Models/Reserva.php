@@ -102,4 +102,68 @@ class Reserva
         ");
         return $stmt->fetchAll(PDO::FETCH_CLASS, self::class);
     }
+
+    // app/Models/Reserva.php
+
+   // 1. Cuenta las citas de hoy (CORREGIDO: Usa JOIN con horario)
+    public static function countToday() {
+        $db = Database::getInstance();
+        $today = date('Y-m-d');
+        
+        // ESTA ES LA CONSULTA CORRECTA:
+        $sql = "SELECT COUNT(*) as total 
+                FROM reserva r 
+                JOIN horario h ON r.horario_id = h.id 
+                WHERE h.fecha = :today AND r.estado != 'cancelada'";
+                
+        $stmt = $db->prepare($sql);
+        $stmt->execute([':today' => $today]);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $result['total'] ?? 0;
+    }
+
+    // 2. Suma ingresos del mes (CORREGIDO: Usa JOIN con horario y servicio)
+    public static function sumMonthlyRevenue() {
+        $db = Database::getInstance();
+        $month = date('m');
+        $year = date('Y');
+        
+        $sql = "SELECT SUM(s.precio) as revenue 
+                FROM reserva r 
+                JOIN horario h ON r.horario_id = h.id 
+                JOIN servicio s ON r.servicio_id = s.id
+                WHERE MONTH(h.fecha) = :m AND YEAR(h.fecha) = :y AND r.estado != 'cancelada'";
+                
+        $stmt = $db->prepare($sql);
+        $stmt->execute([':m' => $month, ':y' => $year]);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $result['revenue'] ?? 0;
+    }
+
+    // 3. Próximas citas (CORREGIDO: Usa JOIN para traer nombres reales)
+    public static function getUpcoming($limit = 5) {
+        $db = Database::getInstance();
+        $today = date('Y-m-d');
+        
+        $sql = "SELECT 
+                    r.id, 
+                    r.estado, 
+                    u.nombre as cliente_nombre, 
+                    s.nombre as servicio_nombre, 
+                    h.fecha, 
+                    h.hora_inicio
+                FROM reserva r 
+                JOIN usuario u ON r.usuario_id = u.id 
+                JOIN servicio s ON r.servicio_id = s.id 
+                JOIN horario h ON r.horario_id = h.id
+                WHERE h.fecha >= :today AND r.estado != 'cancelada'
+                ORDER BY h.fecha ASC, h.hora_inicio ASC 
+                LIMIT " . (int)$limit;
+        
+        $stmt = $db->prepare($sql);
+        $stmt->execute([':today' => $today]);
+        
+        // Importante: fetchAll devuelve instancias de la clase actual
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, self::class);
+    }
 }

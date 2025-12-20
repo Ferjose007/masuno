@@ -2,181 +2,108 @@
 namespace App\Controllers;
 
 use Core\Controller;
-use Core\Database;
 use App\Models\User;
 
 class ClientController extends Controller
 {
-    /**
-     * Verifica que el usuario logueado sea admin.
-     */
-    private function authorizeAdmin()
-    {
-        if (
-            empty($_SESSION['user']) ||
-            $_SESSION['user']['rol'] !== 'admin'
-        ) {
-            header('Location: index.php?url=Auth/showLogin');
-            exit;
-        }
-    }
-
-    /**
-     * Listado de clientes.
-     */
+    // 1. Listar Clientes (Vista Única con Modales)
     public function index()
     {
-        $this->authorizeAdmin();
-        // Obtiene todos los usuarios con rol 'cliente'
-        $clientes = User::getAllClients();
+        $this->authorizeAdmin(); // Seguridad (heredada de Core\Controller)
+        
+        $clientes = User::getAllClients(); 
+        
+        // Carga la vista que contiene la tabla y todos los modales
         $this->view('admin/clients/index', compact('clientes'));
     }
 
-    /**
-     * Muestra detalle de un cliente.
-     */
-    public function show()
-    {
-        $this->authorizeAdmin();
-        $id = (int)($_GET['id'] ?? 0);
-        $cliente = User::findById($id);
-        $this->view('admin/clients/show', compact('cliente'));
-    }
-
-    /**
-     * Formulario para crear un nuevo cliente.
-     */
-    public function create()
-    {
-        $this->authorizeAdmin();
-        $errors = [];
-        $old    = ['nombre'=>'', 'email'=>''];
-        $this->view('admin/clients/form', compact('errors','old'));
-    }
-
-    /**
-     * Procesa el POST de creación de cliente.
-     */
+    // 2. Guardar Nuevo Cliente (Desde Modal Crear)
     public function store()
     {
         $this->authorizeAdmin();
-        $nombre    = trim($_POST['nombre']   ?? '');
-        $email     = trim($_POST['email']    ?? '');
-        $password  = $_POST['password']      ?? '';
-        $password2 = $_POST['password2']     ?? '';
-        $errors    = [];
+        
+        // Validar campos obligatorios
+        if (!empty($_POST['nombre']) && !empty($_POST['email']) && !empty($_POST['password'])) {
+            $data = $_POST;
+            
+            // Seguridad: Encriptar contraseña
+            $data['password'] = password_hash($_POST['password'], PASSWORD_DEFAULT);
+            
+            // Forzar rol de cliente
+            $data['rol'] = 'cliente'; 
 
-        // Validaciones
-        if ($nombre === '') {
-            $errors[] = 'El nombre es obligatorio.';
-        }
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errors[] = 'El email no es válido.';
-        }
-        if (strlen($password) < 6) {
-            $errors[] = 'La contraseña debe tener al menos 6 caracteres.';
-        }
-        if ($password !== $password2) {
-            $errors[] = 'Las contraseñas no coinciden.';
-        }
+            // Verificar duplicados (opcional pero recomendado)
+            if (User::findByEmail($data['email'])) {
+                // Aquí podrías manejar un error, por simplicidad redirigimos
+                header('Location: ' . BASE_URL . '/index.php?url=Client/index&error=email_exists');
+                exit;
+            }
 
-        if (!empty($errors)) {
-            $old = ['nombre'=>$nombre,'email'=>$email];
-            $this->view('admin/clients/form', compact('errors','old'));
-            return;
+            User::create($data);
         }
-
-        // Inserta en BD
-        $db = Database::getInstance();
-        $stmt = $db->prepare("
-            INSERT INTO usuario (nombre,email,password,rol)
-            VALUES (:n,:e,:p,'cliente')
-        ");
-        $stmt->execute([
-            'n' => $nombre,
-            'e' => $email,
-            'p' => password_hash($password, PASSWORD_DEFAULT)
-        ]);
-
-        header('Location: index.php?url=Client/index');
+        
+        header('Location: ' . BASE_URL . '/index.php?url=Client/index');
         exit;
     }
 
-    /**
-     * Formulario para editar un cliente existente.
-     */
-    public function edit()
-    {
-        $this->authorizeAdmin();
-        $id      = (int)($_GET['id'] ?? 0);
-        $cliente = User::findById($id);
-
-        $errors = [];
-        $old    = [
-            'id'     => $cliente->id,
-            'nombre' => $cliente->nombre,
-            'email'  => $cliente->email
-        ];
-
-        $this->view('admin/clients/form', compact('errors','old'));
-    }
-
-    /**
-     * Procesa el POST de actualización de cliente.
-     */
+    // 3. Actualizar Cliente (Desde Modal Editar)
     public function update()
     {
         $this->authorizeAdmin();
-        $id     = (int)($_POST['id']     ?? 0);
-        $nombre = trim($_POST['nombre']  ?? '');
-        $email  = trim($_POST['email']   ?? '');
-        $errors = [];
-
-        // Validaciones mínimas
-        if ($nombre === '') {
-            $errors[] = 'El nombre es obligatorio.';
+        
+        $id = $_POST['id'] ?? null;
+        $user = User::find((int)$id);
+        
+        if ($user) {
+            $data = $_POST;
+            
+            // Lógica de Contraseña:
+            // Si el campo password NO está vacío, lo encriptamos y actualizamos.
+            // Si está vacío, lo quitamos del array para no sobrescribir la actual con vacío.
+            if (!empty($_POST['password'])) {
+                $data['password'] = password_hash($_POST['password'], PASSWORD_DEFAULT);
+            } else {
+                unset($data['password']); 
+            }
+            
+            // El método update del modelo se encarga de filtrar campos y actualizar 'updated_at'
+            $user->update($data);
         }
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errors[] = 'El email no es válido.';
-        }
-
-        if (!empty($errors)) {
-            $old = ['id'=>$id,'nombre'=>$nombre,'email'=>$email];
-            $this->view('admin/clients/form', compact('errors','old'));
-            return;
-        }
-
-        // Actualiza en BD
-        $db = Database::getInstance();
-        $stmt = $db->prepare("
-            UPDATE usuario
-               SET nombre = :n,
-                   email  = :e
-             WHERE id = :id
-        ");
-        $stmt->execute([
-            'n'  => $nombre,
-            'e'  => $email,
-            'id' => $id
-        ]);
-
-        header('Location: index.php?url=Client/index');
+        
+        header('Location: ' . BASE_URL . '/index.php?url=Client/index');
         exit;
     }
 
-    /**
-     * Elimina un cliente.
-     */
+    // 4. Eliminar Cliente (Borrado Permanente)
     public function delete()
     {
         $this->authorizeAdmin();
-        $id = (int)($_GET['id'] ?? 0);
+        
+        $id = $_GET['id'] ?? null;
+        $user = User::find((int)$id);
+        
+        if ($user) {
+            $user->delete();
+        }
+        
+        header('Location: ' . BASE_URL . '/index.php?url=Client/index');
+        exit;
+    }
 
-        $db = Database::getInstance();
-        $db->prepare("DELETE FROM usuario WHERE id = :id")
-           ->execute(['id' => $id]);
-
-        header('Location: index.php?url=Client/index');
+    // 5. Anular / Activar Cliente (Soft Delete / Toggle)
+    public function toggle()
+    {
+        $this->authorizeAdmin();
+        
+        $id = $_GET['id'] ?? null;
+        $user = User::find((int)$id);
+        
+        if ($user) {
+            // Llama al método del modelo que cambia 1 a 0 y viceversa
+            $user->toggleStatus(); 
+        }
+        
+        header('Location: ' . BASE_URL . '/index.php?url=Client/index');
         exit;
     }
 }

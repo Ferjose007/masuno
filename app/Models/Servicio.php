@@ -8,10 +8,11 @@ class Servicio
 {
     public $id;
     public $nombre;
-    public  $descripcion;
+    public $descripcion;
     public $duracion_minutes;
     public $precio;
     public $creado_en;
+    public $activo; // <--- Nuevo campo
 
     public static function all(): array
     {
@@ -32,14 +33,16 @@ class Servicio
     public static function create(array $data): bool
     {
         $db = Database::getInstance();
+        // Agregamos 'activo' por defecto en 1
         $stmt = $db->prepare("
-            INSERT INTO servicio (nombre, duracion_minutes, precio)
-            VALUES (:nombre, :duracion, :precio)
+            INSERT INTO servicio (nombre, descripcion, duracion_minutes, precio, activo)
+            VALUES (:nombre, :descripcion, :duracion, :precio, 1)
         ");
         return $stmt->execute([
-            'nombre'   => $data['nombre'],
-            'duracion' => $data['duracion_minutes'],
-            'precio'   => $data['precio']
+            'nombre'      => $data['nombre'],
+            'descripcion' => $data['descripcion'] ?? null,
+            'duracion'    => $data['duracion_minutes'],
+            'precio'      => $data['precio']
         ]);
     }
 
@@ -49,15 +52,17 @@ class Servicio
         $stmt = $db->prepare("
             UPDATE servicio
                SET nombre = :nombre,
+                   descripcion = :descripcion,
                    duracion_minutes = :duracion,
                    precio = :precio
              WHERE id = :id
         ");
         return $stmt->execute([
-            'nombre'   => $data['nombre'],
-            'duracion' => $data['duracion_minutes'],
-            'precio'   => $data['precio'],
-            'id'       => $this->id
+            'nombre'      => $data['nombre'],
+            'descripcion' => $data['descripcion'] ?? null,
+            'duracion'    => $data['duracion_minutes'],
+            'precio'      => $data['precio'],
+            'id'          => $this->id
         ]);
     }
 
@@ -66,5 +71,18 @@ class Servicio
         $db = Database::getInstance();
         $stmt = $db->prepare("DELETE FROM servicio WHERE id = :id");
         return $stmt->execute(['id' => $this->id]);
+    }
+
+    // Nuevo método: Toggle Activo/Inactivo
+    public function toggleStatus()
+    {
+        $db = Database::getInstance();
+        $nuevoEstado = $this->activo == 1 ? 0 : 1;
+        
+        $stmt = $db->prepare("UPDATE servicio SET activo = :activo WHERE id = :id");
+        return $stmt->execute([
+            'activo' => $nuevoEstado,
+            'id'     => $this->id
+        ]);
     }
 }

@@ -8,6 +8,7 @@ use App\Models\EstilistaServicio;
 
 class AdminStylistController extends Controller
 {
+    /*
     private function authorizeAdmin()
     {
         if (
@@ -17,7 +18,8 @@ class AdminStylistController extends Controller
             header('Location: index.php?url=Auth/showLogin');
             exit;
         }
-    }
+    }*/
+    
 
     // Listado de estilistas
     public function index()

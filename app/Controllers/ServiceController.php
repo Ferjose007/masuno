@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Controllers;
 
 use Core\Controller;
@@ -7,19 +6,6 @@ use App\Models\Servicio;
 
 class ServiceController extends Controller
 {
-    // MÉTODO PRIVADO: centraliza la validación de acceso
-    private function authorizeAdmin()
-    {
-        if (
-            empty($_SESSION['user'])
-            || $_SESSION['user']['rol'] !== 'admin'
-        ) {
-            header('Location: index.php?url=Auth/showLogin');
-            exit;
-        }
-    }
-
-
     // Listar servicios
     public function index()
     {
@@ -28,33 +14,15 @@ class ServiceController extends Controller
         $this->view('admin/services/index', compact('servicios'));
     }
 
-    // Mostrar formulario de creación
-    public function create()
-    {
-        $this->authorizeAdmin();
-        $this->view('admin/services/form', ['action' => 'store']);
-    }
-
     // Guardar nuevo servicio
     public function store()
     {
         $this->authorizeAdmin();
-        Servicio::create($_POST);
-        header('Location: index.php?url=Service/index');
-        exit;
-    }
-
-    // Mostrar formulario de edición
-    public function edit()
-    {
-        $this->authorizeAdmin();
-        $id = $_GET['id'] ?? null;
-        $servicio = Servicio::find((int)$id);
-        if (!$servicio) {
-            echo "Servicio no encontrado";
-            return;
+        if (!empty($_POST['nombre']) && !empty($_POST['precio'])) {
+            Servicio::create($_POST);
         }
-        $this->view('admin/services/form', ['action' => 'update', 'servicio' => $servicio]);
+        header('Location: ' . BASE_URL . '/index.php?url=Service/index');
+        exit;
     }
 
     // Actualizar servicio
@@ -63,10 +31,11 @@ class ServiceController extends Controller
         $this->authorizeAdmin();
         $id = $_POST['id'] ?? null;
         $servicio = Servicio::find((int)$id);
+        
         if ($servicio) {
             $servicio->update($_POST);
         }
-        header('Location: index.php?url=Service/index');
+        header('Location: ' . BASE_URL . '/index.php?url=Service/index');
         exit;
     }
 
@@ -76,10 +45,25 @@ class ServiceController extends Controller
         $this->authorizeAdmin();
         $id = $_GET['id'] ?? null;
         $servicio = Servicio::find((int)$id);
+        
         if ($servicio) {
             $servicio->delete();
         }
-        header('Location: index.php?url=Service/index');
+        header('Location: ' . BASE_URL . '/index.php?url=Service/index');
+        exit;
+    }
+
+    // NUEVO: Anular / Activar Servicio
+    public function toggle()
+    {
+        $this->authorizeAdmin();
+        $id = $_GET['id'] ?? null;
+        $servicio = Servicio::find((int)$id);
+        
+        if ($servicio) {
+            $servicio->toggleStatus();
+        }
+        header('Location: ' . BASE_URL . '/index.php?url=Service/index');
         exit;
     }
 }

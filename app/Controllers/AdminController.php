@@ -2,36 +2,27 @@
 namespace App\Controllers;
 
 use Core\Controller;
-use App\Models\Servicio;
-use App\Models\Horario;
 use App\Models\User;
 use App\Models\Reserva;
 
+
 class AdminController extends Controller
 {
-    public function dashboard()
-    {
-        // Validar sesión y rol
-        if (
-            empty($_SESSION['user']) ||
-            $_SESSION['user']['rol'] !== 'admin'
-        ) {
-            header('Location: /masuno/public/index.php?url=Auth/showLogin');
-            exit;
-        }
+    public function dashboard() {
+        $this->authorizeAdmin();
 
-        // Traer datos para el dashboard
-        $servicios = Servicio::all();
-        $horarios  = Horario::all();
-        $clientes  = User::getAllClients();
-        $reservas = Reserva::findAll();
+        // Recopilar estadísticas
+        $stats = [
+            'citas_hoy'      => Reserva::countToday(),
+            'ingresos_mes'   => Reserva::sumMonthlyRevenue(),
+            'total_clientes' => User::countByRole('cliente'),
+            'total_stylists' => User::countByRole('estilista')
+        ];
 
-        // Pasar a la vista
-        $this->view('admin/dashboard', [
-            'servicios' => $servicios,
-            'horarios'  => $horarios,
-            'clientes'  => $clientes,
-            'reservas'  => $reservas
-        ]);
+        // Obtener lista de próximas citas
+        $upcoming_appointments = Reserva::getUpcoming(5);
+
+        // Enviar todo a la vista
+        $this->view('admin/dashboard', compact('stats', 'upcoming_appointments'));
     }
 }
