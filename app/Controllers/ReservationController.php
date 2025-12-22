@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers;
 
 use Core\Controller;
@@ -11,7 +12,7 @@ class ReservationController extends Controller
     public function index()
     {
         $this->authorizeAdmin();
-        
+
         // 1. Cargar Reservas
         $reservas = Reserva::all();
         $clientes = User::getAllClients();
@@ -38,7 +39,7 @@ class ReservationController extends Controller
         $this->authorizeAdmin();
         $id = $_POST['id'] ?? null;
         $reserva = Reserva::find((int)$id);
-        
+
         if ($reserva) {
             $reserva->update($_POST);
         }
@@ -52,7 +53,7 @@ class ReservationController extends Controller
         $this->authorizeAdmin();
         $id = $_GET['id'] ?? null;
         $status = $_GET['status'] ?? 'pendiente';
-        
+
         $reserva = Reserva::find((int)$id);
         if ($reserva) {
             $reserva->changeStatus($status);
@@ -90,5 +91,50 @@ class ReservationController extends Controller
 
         // 4. Cargar la vista del cliente (crearemos esta carpeta ahora)
         $this->view('client/reservations/my', compact('reservas'));
+    }
+
+    // En app/Controllers/ReservationController.php
+
+    public function finalizarVenta()
+    {
+        $this->authorizeAdmin(); // Asegúrate que esté logueado
+
+        $reserva_id = $_POST['reserva_id'];
+        $productos_json = $_POST['productos_data']; // Recibiremos un JSON desde el front
+
+        // 1. Decodificar productos (ID, Cantidad, Precio)
+        $productos = json_decode($productos_json, true);
+
+        $reserva = Reserva::find($reserva_id);
+
+        if ($reserva) {
+            // 2. Guardar productos y descontar stock
+            if (!empty($productos)) {
+                $reserva->guardarProductos($productos);
+            }
+
+            // 3. Cambiar estado a COMPLETADA
+            $reserva->updateStatus('completada');
+
+            // 4. Redirigir a la BOLETA
+            header("Location: " . BASE_URL . "/index.php?url=Reservation/ticket&id=" . $reserva_id);
+            exit;
+        }
+    }
+
+    public function ticket()
+    {
+        $this->authorizeAdmin();
+        $id = $_GET['id'] ?? null;
+
+        $reserva = Reserva::find($id);
+        // Asumimos que tu modelo Reserva tiene método para traer cliente y servicio
+        // Si no, deberías hacer joins o consultas extra aquí.
+
+        // Traemos los productos vendidos
+        $productos = $reserva->getProductos();
+
+        // Vista exclusiva para imprimir
+        require_once __DIR__ . '/../views/admin/reservations/ticket.php';
     }
 }
