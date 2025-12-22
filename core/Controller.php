@@ -4,7 +4,7 @@ namespace Core;
 class Controller {
     public function view($view, $data = []) {
         extract($data);
-        require __DIR__ . '/../app/views/' . $view . '.php';
+        require __DIR__ . '/../App/views/' . $view . '.php';
     }
 
     // Método para proteger rutas: Si no es admin, lo saca.
