@@ -1,96 +1,94 @@
 <?php
-
 namespace App\Controllers;
 
 use Core\Controller;
-use App\Models\Servicio;
-use App\Models\Horario;
 use App\Models\Reserva;
+use App\Models\User;
+use App\Models\Servicio;
 
 class ReservationController extends Controller
 {
-    private function authorizeClienteOAdmin()
-    {
-        if (
-            empty($_SESSION['user']) ||
-            ! in_array($_SESSION['user']['rol'], ['cliente', 'admin'])
-        ) {
-            header('Location: index.php?url=Auth/showLogin');
-            exit;
-        }
-    }
-
-    // Nuevo: dashboard para clientes
-    public function dashboard()
-    {
-        $this->authorizeClienteOAdmin();
-        $uid       = $_SESSION['user']['id'];
-        $nombre    = $_SESSION['user']['nombre'];
-        $reservas  = Reserva::findByUser($uid);
-        $count     = count($reservas);
-        // Tomamos hasta 5 próximas (o las que haya)
-        $upcoming  = array_slice($reservas, 0, 5);
-
-        $this->view('reservations/dashboard', compact(
-            'nombre',
-            'count',
-            'upcoming'
-        ));
-    }
-
-    // Mostrar el formulario de reserva
-    public function create()
-    {
-        $this->authorizeClienteOAdmin();
-        $servicios = Servicio::all();
-        // sólo horarios libres
-        $todos     = Horario::all();
-        $horarios  = array_filter($todos, fn($h) => $h->estado === 'L');
-        $this->view('reservations/index', compact('servicios', 'horarios'));
-    }
-
-    // (Opcional) alias para que index haga lo mismo que create
     public function index()
     {
-        $this->create();
+        $this->authorizeAdmin();
+        
+        // 1. Cargar Reservas
+        $reservas = Reserva::all();
+        $clientes = User::getAllClients();
+
+        $servicios = Servicio::getActive();
+
+        // Enviamos todo a la vista
+        $this->view('admin/reservations/index', compact('reservas', 'clientes', 'servicios'));
     }
 
-    // Guardar la reserva y marcar el horario
     public function store()
     {
-        $this->authorizeClienteOAdmin();
-        $uid = $_SESSION['user']['id'];
-        $sid = (int)($_POST['servicio_id'] ?? 0);
-        $hid = (int)($_POST['horario_id']  ?? 0);
-
-        if ($sid && $hid) {
-            Reserva::create([
-                'usuario_id'  => $uid,
-                'servicio_id' => $sid,
-                'horario_id'  => $hid
-            ]);
-            // marcar horario como reservado
-            $h = Horario::find($hid);
-            if ($h) {
-                $h->update([
-                    'fecha'       => $h->fecha,
-                    'hora_inicio' => $h->hora_inicio,
-                    'hora_fin'    => $h->hora_fin,
-                    'estado'      => 'R',
-                    'estilista_id'  => $h->estilista_id,
-                ]);
-            }
+        $this->authorizeAdmin();
+        // Validar que vengan los IDs
+        if (!empty($_POST['usuario_id']) && !empty($_POST['servicio_id']) && !empty($_POST['fecha_cita'])) {
+            Reserva::create($_POST);
         }
-        header('Location: index.php?url=Reservation/my');
+        header('Location: ' . BASE_URL . '/index.php?url=Reservation/index');
         exit;
     }
 
-    // Listar las reservas del cliente
+    public function update()
+    {
+        $this->authorizeAdmin();
+        $id = $_POST['id'] ?? null;
+        $reserva = Reserva::find((int)$id);
+        
+        if ($reserva) {
+            $reserva->update($_POST);
+        }
+        header('Location: ' . BASE_URL . '/index.php?url=Reservation/index');
+        exit;
+    }
+
+    // Acción para CANCELAR (Anular) o CONFIRMAR
+    public function changeStatus()
+    {
+        $this->authorizeAdmin();
+        $id = $_GET['id'] ?? null;
+        $status = $_GET['status'] ?? 'pendiente';
+        
+        $reserva = Reserva::find((int)$id);
+        if ($reserva) {
+            $reserva->changeStatus($status);
+        }
+        header('Location: ' . BASE_URL . '/index.php?url=Reservation/index');
+        exit;
+    }
+
+    public function delete()
+    {
+        $this->authorizeAdmin();
+        $id = $_GET['id'] ?? null;
+        $reserva = Reserva::find((int)$id);
+        if ($reserva) {
+            $reserva->delete();
+        }
+        header('Location: ' . BASE_URL . '/index.php?url=Reservation/index');
+        exit;
+    }
+
+    // Panel del Cliente: Mis Reservas
     public function my()
     {
-        $this->authorizeClienteOAdmin();
-        $uid      = $_SESSION['user']['id'];
-        $reservas = Reserva::findByUser($uid);
-        $this->view('reservations/my', compact('reservas'));
+        // 1. Verificar si hay sesión
+        if (!isset($_SESSION['user'])) {
+            header('Location: ' . BASE_URL . '/index.php?url=Auth/showLogin');
+            exit;
+        }
+
+        // 2. Obtener ID del usuario logueado
+        $userId = $_SESSION['user']['id'];
+
+        // 3. Buscar sus reservas
+        $reservas = Reserva::getByUser($userId);
+
+        // 4. Cargar la vista del cliente (crearemos esta carpeta ahora)
+        $this->view('client/reservations/my', compact('reservas'));
     }
 }

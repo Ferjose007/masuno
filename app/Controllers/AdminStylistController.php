@@ -3,119 +3,115 @@ namespace App\Controllers;
 
 use Core\Controller;
 use App\Models\User;
-use App\Models\Servicio;
-use App\Models\EstilistaServicio;
+use App\Models\Servicio; // <--- Importante
 
 class AdminStylistController extends Controller
 {
-    /*
-    private function authorizeAdmin()
-    {
-        if (
-            empty($_SESSION['user'])
-            || $_SESSION['user']['rol'] !== 'admin'
-        ) {
-            header('Location: index.php?url=Auth/showLogin');
-            exit;
-        }
-    }*/
-    
-
-    // Listado de estilistas
     public function index()
     {
         $this->authorizeAdmin();
-        $stylists = User::getAllStylists();
-        $this->view('admin/stylists/index', compact('stylists'));
+        $estilistas = User::getAllStylists();
+        
+        // 1. Cargamos servicios para el formulario
+        $servicios = Servicio::all(); 
+
+        // 2. Para cada estilista, cargamos sus servicios actuales (para pintar el checklist al editar)
+        // Esto es un pequeño truco para enviarlo ya listo a la vista
+        foreach ($estilistas as $estilista) {
+            $estilista->mis_servicios = User::getServiceIds($estilista->id); // Array [1, 2]
+            $estilista->lista_servicios = User::getServicesObj($estilista->id); // Objetos para ver detalles
+        }
+
+        $this->view('admin/stylists/index', compact('estilistas', 'servicios'));
     }
 
-    // Formulario de creación
-    public function create()
-    {
-        $this->authorizeAdmin();
-        $services = Servicio::all();
-        $this->view('admin/stylists/form', [
-            'action'   => 'store',
-            'services' => $services
-        ]);
-    }
-
-    // Guardar nuevo estilista
     public function store()
     {
         $this->authorizeAdmin();
-        // Crear usuario
-        $stmt = \Core\Database::getInstance()->prepare("
-            INSERT INTO usuario (nombre,email,password,rol)
-            VALUES (:nombre,:email,:password,'estilista')
-        ");
-        $stmt->execute([
-            'nombre'   => $_POST['nombre'],
-            'email'    => $_POST['email'],
-            'password' => password_hash($_POST['password'], PASSWORD_DEFAULT)
-        ]);
-        $id = \Core\Database::getInstance()->lastInsertId();
+        
+        if (!empty($_POST['nombre']) && !empty($_POST['email'])) {
+            $data = $_POST;
+            $data['password'] = password_hash($_POST['password'], PASSWORD_DEFAULT);
+            $data['rol'] = 'estilista'; 
 
-        // Asignar servicios si se enviaron
-        if (!empty($_POST['services'])) {
-            EstilistaServicio::assignServices($id, $_POST['services']);
+            if (User::findByEmail($data['email'])) {
+                header('Location: ' . BASE_URL . '/index.php?url=AdminStylist/index&error=email_exists');
+                exit;
+            }
+
+            // A. Creamos el usuario
+            User::create($data);
+            
+            // B. Obtenemos el ID del usuario recién creado (buscándolo por email es lo más rápido aquí)
+            $newUser = User::findByEmail($data['email']);
+            
+            // C. Guardamos sus servicios
+            if (isset($_POST['servicios']) && is_array($_POST['servicios'])) {
+                User::syncServices($newUser->id, $_POST['servicios']);
+            }
         }
-
-        header('Location: index.php?url=AdminStylist/index');
+        
+        header('Location: ' . BASE_URL . '/index.php?url=AdminStylist/index');
         exit;
     }
 
-    // Formulario de edición
-    public function edit()
-    {
-        $this->authorizeAdmin();
-        $id        = (int)($_GET['id'] ?? 0);
-        $stylist   = User::findById($id);
-        $services  = Servicio::all();
-        $assigned  = EstilistaServicio::getServicesForStylist($id);
-        $assignedIds = array_column($assigned, 'id');
-
-        // Indicamos a la vista que debe usar la acción "update"
-        $action = 'update';
-
-        $this->view('admin/stylists/form', compact(
-            'stylist','action','services','assignedIds'
-        ));
-    }
-
-    // Actualizar estilista
     public function update()
     {
         $this->authorizeAdmin();
-        $id = (int)($_POST['id'] ?? 0);
-        // Actualizar nombre/email/password opcional
-        $fields = ['nombre'=>$_POST['nombre'],'email'=>$_POST['email']];
-        if (!empty($_POST['password'])) {
-            $fields['password'] = password_hash($_POST['password'], PASSWORD_DEFAULT);
+        
+        $id = $_POST['id'] ?? null;
+        $user = User::find((int)$id);
+        
+        if ($user) {
+            $data = $_POST;
+            if (!empty($_POST['password'])) {
+                $data['password'] = password_hash($_POST['password'], PASSWORD_DEFAULT);
+            } else {
+                unset($data['password']); 
+            }
+            
+            $user->update($data);
+
+            // ACTUALIZAR SERVICIOS
+            // Si no marcan ninguno, enviamos array vacío
+            $serviciosSeleccionados = $_POST['servicios'] ?? [];
+            User::syncServices($user->id, $serviciosSeleccionados);
         }
-        $set = implode(',', array_map(fn($k) => "$k=:$k", array_keys($fields)));
-        $fields['id'] = $id;
-
-        \Core\Database::getInstance()
-            ->prepare("UPDATE usuario SET $set WHERE id = :id")
-            ->execute($fields);
-
-        // Reasignar servicios
-        EstilistaServicio::assignServices($id, $_POST['services'] ?? []);
-
-        header('Location: index.php?url=AdminStylist/index');
+        
+        header('Location: ' . BASE_URL . '/index.php?url=AdminStylist/index');
         exit;
     }
 
-    // Eliminar estilista
+    // ... delete y toggle se mantienen igual ...
+    // 4. Eliminar Estilista (AQUÍ ESTABA EL VACÍO)
     public function delete()
     {
         $this->authorizeAdmin();
-        $id = (int)($_GET['id'] ?? 0);
-        \Core\Database::getInstance()
-            ->prepare("DELETE FROM usuario WHERE id = :id")
-            ->execute(['id'=>$id]);
-        header('Location: index.php?url=AdminStylist/index');
+        
+        $id = $_GET['id'] ?? null;
+        $user = User::find((int)$id);
+        
+        if ($user) {
+            $user->delete();
+        }
+        
+        header('Location: ' . BASE_URL . '/index.php?url=AdminStylist/index');
+        exit;
+    }
+
+    // 5. Anular / Activar Toggle (AQUÍ ESTABA EL VACÍO)
+    public function toggle()
+    {
+        $this->authorizeAdmin();
+        
+        $id = $_GET['id'] ?? null;
+        $user = User::find((int)$id);
+        
+        if ($user) {
+            $user->toggleStatus(); 
+        }
+        
+        header('Location: ' . BASE_URL . '/index.php?url=AdminStylist/index');
         exit;
     }
 }

@@ -6,164 +6,179 @@ use PDO;
 
 class Reserva
 {
-    // Propiedades de la tabla reserva
-    public int    $id;
-    public int    $usuario_id;
-    public int    $servicio_id;
-    public int    $horario_id;
-    public string $estado;
-    public string $creado_en;
+    public $id;
+    public $usuario_id;
+    public $servicio_id;
+    public $horario_id; // Ahora puede ser null
+    public $fecha_cita;
+    public $hora_cita;
+    public $estado;
+    public $notas;
+    public $creado_en;
+    
+    // Propiedades virtuales (para mostrar nombres en la lista)
+    public $cliente_nombre;
+    public $cliente_email;
+    public $servicio_nombre;
+    public $servicio_precio;
+    public $servicio_duracion;
 
-    // Campos de JOIN / alias
-    public string $cliente_nombre;
-    public string $servicio_nombre;
-    public string $fecha;
-    public string $hora_inicio;
-    public string $hora_fin;
-
-    /**
-     * Constructor: asigna sólo propiedades existentes (evita dinámicas)
-     */
-    public function __construct(array $data = [])
-    {
-        foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
-                $this->$key = $value;
-            }
-        }
-    }
-
-    /**
-     * Inserta una nueva reserva
-     */
-    public static function create(array $data): bool
+    public static function all()
     {
         $db = Database::getInstance();
+        // JOIN simplificado: Ya tenemos fecha y hora en la tabla reserva
+        $sql = "SELECT r.*, 
+                       u.nombre as cliente_nombre, 
+                       u.email as cliente_email,
+                       s.nombre as servicio_nombre,
+                       s.precio as servicio_precio,
+                       s.duracion_minutes as servicio_duracion
+                FROM reserva r
+                JOIN usuario u ON r.usuario_id = u.id
+                JOIN servicio s ON r.servicio_id = s.id
+                ORDER BY r.fecha_cita DESC, r.hora_cita DESC";
+        
+        $stmt = $db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_CLASS, self::class);
+    }
+
+    public static function find($id)
+    {
+        $db = Database::getInstance();
+        $sql = "SELECT r.*, u.nombre as cliente_nombre, s.nombre as servicio_nombre 
+                FROM reserva r
+                JOIN usuario u ON r.usuario_id = u.id
+                JOIN servicio s ON r.servicio_id = s.id
+                WHERE r.id = :id";
+        $stmt = $db->prepare($sql);
+        $stmt->execute(['id' => $id]);
+        $stmt->setFetchMode(PDO::FETCH_CLASS, self::class);
+        return $stmt->fetch();
+    }
+
+    public static function create(array $data)
+    {
+        $db = Database::getInstance();
+        // Nota: Insertamos horario_id como NULL si no viene definido
         $stmt = $db->prepare("
-            INSERT INTO reserva (usuario_id, servicio_id, horario_id)
-            VALUES (:usuario_id, :servicio_id, :horario_id)
+            INSERT INTO reserva (usuario_id, servicio_id, horario_id, fecha_cita, hora_cita, notas, estado, creado_en)
+            VALUES (:cliente, :servicio, NULL, :fecha, :hora, :notas, 'pendiente', NOW())
         ");
         return $stmt->execute([
-            'usuario_id'  => $data['usuario_id'],
-            'servicio_id' => $data['servicio_id'],
-            'horario_id'  => $data['horario_id']
+            'cliente'  => $data['usuario_id'],
+            'servicio' => $data['servicio_id'],
+            'fecha'    => $data['fecha_cita'],
+            'hora'     => $data['hora_cita'],
+            'notas'    => $data['notas'] ?? null
         ]);
     }
 
-    /**
-     * Obtiene todas las reservas de un cliente, con detalles
-     */
-    public static function findByUser(int $userId): array
+    public function update(array $data)
     {
         $db = Database::getInstance();
         $stmt = $db->prepare("
-            SELECT 
-              r.id,
-              r.estado,
-              r.creado_en,
-              s.nombre AS servicio_nombre,
-              h.fecha,
-              h.hora_inicio,
-              h.hora_fin
-            FROM reserva r
-            JOIN servicio s  ON r.servicio_id = s.id
-            JOIN horario  h  ON r.horario_id  = h.id
-            WHERE r.usuario_id = :uid
-            ORDER BY h.fecha, h.hora_inicio
+            UPDATE reserva 
+            SET fecha_cita = :fecha, hora_cita = :hora, notas = :notas, servicio_id = :servicio, usuario_id = :cliente
+            WHERE id = :id
         ");
-        $stmt->execute(['uid' => $userId]);
-        return $stmt->fetchAll(PDO::FETCH_CLASS, self::class);
+        return $stmt->execute([
+            'fecha'    => $data['fecha_cita'],
+            'hora'     => $data['hora_cita'],
+            'notas'    => $data['notas'] ?? null,
+            'servicio' => $data['servicio_id'],
+            'cliente'  => $data['usuario_id'],
+            'id'       => $this->id
+        ]);
     }
 
-    /**
-     * Obtiene todas las reservas con cliente, servicio y horario
-     */
-    public static function findAll(): array
+    public function changeStatus($nuevoEstado)
     {
         $db = Database::getInstance();
-        $stmt = $db->query("
-            SELECT 
-              r.id,
-              r.usuario_id,
-              r.servicio_id,
-              r.horario_id,
-              r.estado,
-              r.creado_en,
-              u.nombre AS cliente_nombre,
-              s.nombre AS servicio_nombre,
-              h.fecha,
-              h.hora_inicio,
-              h.hora_fin
-            FROM reserva r
-            JOIN usuario u   ON r.usuario_id  = u.id
-            JOIN servicio s  ON r.servicio_id = s.id
-            JOIN horario h   ON r.horario_id  = h.id
-            ORDER BY h.fecha DESC, h.hora_inicio DESC
-        ");
-        return $stmt->fetchAll(PDO::FETCH_CLASS, self::class);
+        $stmt = $db->prepare("UPDATE reserva SET estado = :estado WHERE id = :id");
+        return $stmt->execute(['estado' => $nuevoEstado, 'id' => $this->id]);
     }
 
-    // app/Models/Reserva.php
-
-   // 1. Cuenta las citas de hoy (CORREGIDO: Usa JOIN con horario)
+    public function delete()
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("DELETE FROM reserva WHERE id = :id");
+        return $stmt->execute(['id' => $this->id]);
+    }
+    
+    // Métodos para estadísticas (Dashboard) corregidos
     public static function countToday() {
         $db = Database::getInstance();
         $today = date('Y-m-d');
-        
-        // ESTA ES LA CONSULTA CORRECTA:
-        $sql = "SELECT COUNT(*) as total 
-                FROM reserva r 
-                JOIN horario h ON r.horario_id = h.id 
-                WHERE h.fecha = :today AND r.estado != 'cancelada'";
-                
-        $stmt = $db->prepare($sql);
+        // Ahora usamos fecha_cita directo de la tabla reserva
+        $stmt = $db->prepare("SELECT COUNT(*) as total FROM reserva WHERE fecha_cita = :today AND estado != 'cancelada'");
         $stmt->execute([':today' => $today]);
-        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
-        return $result['total'] ?? 0;
+        $res = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $res['total'] ?? 0;
     }
-
-    // 2. Suma ingresos del mes (CORREGIDO: Usa JOIN con horario y servicio)
+    /*
     public static function sumMonthlyRevenue() {
         $db = Database::getInstance();
         $month = date('m');
         $year = date('Y');
+        $sql = "SELECT SUM(s.precio) as revenue 
+                FROM reserva r 
+                JOIN servicio s ON r.servicio_id = s.id
+                WHERE MONTH(r.fecha_cita) = :m AND YEAR(r.fecha_cita) = :y AND r.estado != 'cancelada'";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([':m' => $month, ':y' => $year]);
+        $res = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $res['revenue'] ?? 0;
+    }
+    */
+
+    // Calcular ingresos SOLO de HOY y SOLO de citas COMPLETADAS
+    public static function sumDailyRevenue() {
+        $db = Database::getInstance();
+        $today = date('Y-m-d');
         
         $sql = "SELECT SUM(s.precio) as revenue 
                 FROM reserva r 
-                JOIN horario h ON r.horario_id = h.id 
                 JOIN servicio s ON r.servicio_id = s.id
-                WHERE MONTH(h.fecha) = :m AND YEAR(h.fecha) = :y AND r.estado != 'cancelada'";
+                WHERE r.fecha_cita = :today AND r.estado = 'completada'";
                 
         $stmt = $db->prepare($sql);
-        $stmt->execute([':m' => $month, ':y' => $year]);
-        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
-        return $result['revenue'] ?? 0;
+        $stmt->execute([':today' => $today]);
+        $res = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $res['revenue'] ?? 0;
     }
 
-    // 3. Próximas citas (CORREGIDO: Usa JOIN para traer nombres reales)
     public static function getUpcoming($limit = 5) {
         $db = Database::getInstance();
         $today = date('Y-m-d');
         
-        $sql = "SELECT 
-                    r.id, 
-                    r.estado, 
-                    u.nombre as cliente_nombre, 
-                    s.nombre as servicio_nombre, 
-                    h.fecha, 
-                    h.hora_inicio
+        // CORRECCIÓN: Quitamos los alias "as fecha" y "as hora_inicio"
+        // Ahora usamos los nombres reales de la tabla y la clase.
+        $sql = "SELECT r.id, r.estado, u.nombre as cliente_nombre, s.nombre as servicio_nombre, r.fecha_cita, r.hora_cita
                 FROM reserva r 
                 JOIN usuario u ON r.usuario_id = u.id 
                 JOIN servicio s ON r.servicio_id = s.id 
-                JOIN horario h ON r.horario_id = h.id
-                WHERE h.fecha >= :today AND r.estado != 'cancelada'
-                ORDER BY h.fecha ASC, h.hora_inicio ASC 
+                WHERE r.fecha_cita >= :today AND r.estado != 'cancelada'
+                ORDER BY r.fecha_cita ASC, r.hora_cita ASC 
                 LIMIT " . (int)$limit;
-        
+                
         $stmt = $db->prepare($sql);
         $stmt->execute([':today' => $today]);
+        return $stmt->fetchAll(PDO::FETCH_CLASS, self::class);
+    }
+
+    // Obtener reservas de un usuario específico (Para el panel del cliente)
+    public static function getByUser($userId)
+    {
+        $db = Database::getInstance();
+        $sql = "SELECT r.*, s.nombre as servicio_nombre, s.precio as servicio_precio, s.duracion_minutes 
+                FROM reserva r
+                JOIN servicio s ON r.servicio_id = s.id
+                WHERE r.usuario_id = :id
+                ORDER BY r.fecha_cita DESC, r.hora_cita DESC";
         
-        // Importante: fetchAll devuelve instancias de la clase actual
-        return $stmt->fetchAll(\PDO::FETCH_CLASS, self::class);
+        $stmt = $db->prepare($sql);
+        $stmt->execute(['id' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_CLASS, self::class);
     }
 }

@@ -85,4 +85,12 @@ class Servicio
             'id'     => $this->id
         ]);
     }
+
+    // Obtener SOLO los servicios activos (Para desplegables públicos o de reservas)
+    public static function getActive()
+    {
+        $db = Database::getInstance();
+        $stmt = $db->query("SELECT * FROM servicio WHERE activo = 1 ORDER BY nombre");
+        return $stmt->fetchAll(PDO::FETCH_CLASS, self::class);
+    }
 }
