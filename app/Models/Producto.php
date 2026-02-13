@@ -27,9 +27,8 @@ class Producto
     public static function getActive()
     {
         $db = Database::getInstance();
-        // Solo mostramos si están activos Y si hay stock mayor a 0
-        $stmt = $db->query("SELECT * FROM producto WHERE activo = 1 AND stock > 0 ORDER BY nombre");
-        return $stmt->fetchAll(PDO::FETCH_CLASS, self::class);
+        $stmt = $db->query("SELECT * FROM producto WHERE activo = 1 AND stock > 0"); // O sin stock > 0 si quieres ver los agotados
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
 
     // 3. Buscar por ID
