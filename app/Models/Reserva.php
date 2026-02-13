@@ -66,7 +66,7 @@ class Reserva
             ORDER BY r.fecha_cita DESC, r.hora_cita DESC";
 
         $stmt = $db->query($sql);
-        return $stmt->fetchAll(\PDO::FETCH_OBJ);
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
 
     public static function find($id)

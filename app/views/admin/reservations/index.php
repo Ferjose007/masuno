@@ -52,19 +52,24 @@
                                 <?php foreach ($reservas as $r): ?>
                                     <tr class="hover:bg-gray-50 transition-colors">
                                         <td class="px-6 py-4">
-                                            <div class="font-bold text-gray-800"><?= date('d/m/Y', strtotime($r->fecha_cita)) ?>
+                                            <div class="font-bold text-gray-800">
+                                                <?= date('d/m/Y', strtotime($r->fecha_cita)) ?>
                                             </div>
-                                            <div class="text-xs text-gray-500"><?= date('H:i A', strtotime($r->hora_cita)) ?>
+                                            <div class="text-xs text-gray-500">
+                                                <?= date('H:i A', strtotime($r->hora_cita)) ?>
                                             </div>
                                         </td>
+
                                         <td class="px-6 py-4 text-gray-700 font-medium">
-                                            <?= htmlspecialchars($r->cliente_nombre) ?>
+                                            <?= htmlspecialchars($r->cliente_nombre ?? 'Cliente General') ?>
                                         </td>
+
                                         <td class="text-gray-600">
                                             <?= htmlspecialchars($r->servicios_nombres ?? 'Sin servicios') ?>
                                         </td>
-                                        <td class="px-6 py-4 text-gray-600">
-                                            <?= htmlspecialchars($r->precio_total_estimado) ?>
+
+                                        <td class="px-6 py-4 text-gray-600 font-bold">
+                                            S/. <?= number_format($r->precio_total_estimado ?? 0, 2) ?>
                                         </td>
                                         <td class="px-6 py-4">
                                             <?php
