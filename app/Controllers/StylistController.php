@@ -21,18 +21,20 @@ class StylistController extends Controller
     public function dashboard()
     {
         $this->authorizeStylist();
-        $nombre   = $_SESSION['user']['nombre'];
-        $all      = Reserva::findAll();             // Método que ya creamos
-        $today    = date('Y-m-d');
+        $nombre = $_SESSION['user']['nombre'];
+        $all = Reserva::findAll();             // Método que ya creamos
+        $today = date('Y-m-d');
         $upcoming = array_filter(
             $all,
             fn($r) => $r->fecha >= $today
         );
-        $count    = count($upcoming);
-        $next5    = array_slice($upcoming, 0, 5);
+        $count = count($upcoming);
+        $next5 = array_slice($upcoming, 0, 5);
 
         $this->view('stylist/dashboard', compact(
-            'nombre','count','next5'
+            'nombre',
+            'count',
+            'next5'
         ));
     }
 
