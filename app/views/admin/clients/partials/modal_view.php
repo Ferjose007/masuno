@@ -24,6 +24,10 @@
                 <span class="text-gray-800 font-medium text-sm break-all" id="view-email">-</span>
             </div>
             <div class="flex justify-between items-center hover:bg-gray-50 p-2 rounded transition">
+                <span class="text-gray-500 text-sm">DNI:</span>
+                <span class="text-gray-800 font-medium text-sm" id="view-dni">-</span>
+            </div>
+            <div class="flex justify-between items-center hover:bg-gray-50 p-2 rounded transition">
                 <span class="text-gray-500 text-sm">Teléfono:</span>
                 <span class="text-gray-800 font-medium text-sm" id="view-telefono">-</span>
             </div>

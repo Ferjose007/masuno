@@ -45,11 +45,20 @@
                 <p class="text-xs text-gray-500 mt-2 font-medium">Click para cambiar foto</p>
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo <span
-                        class="text-red-500">*</span></label>
-                <input type="text" name="nombre" id="client-nombre" required
-                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 transition-shadow">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" name="nombre" id="client-nombre" required
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">DNI <span
+                            class="text-gray-400 text-xs">(Opcional)</span></label>
+                    <input type="text" name="dni" id="client-dni"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500"
+                        placeholder="00000000">
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4">

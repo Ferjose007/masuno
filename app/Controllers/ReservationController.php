@@ -14,61 +14,63 @@ class ReservationController extends Controller
     {
         $this->authorizeAdmin();
 
-        // 1. Cargar Reservas
         $reservas = Reserva::all();
         $clientes = User::getAllClients();
         $estilistas = User::getAllStylists();
         $servicios = Servicio::getActive();
         $productos = Producto::getActive();
 
-        // Enviamos todo a la vista
         $this->view('admin/reservations/index', compact('reservas', 'clientes', 'estilistas', 'servicios', 'productos'));
     }
 
+    // =========================================================
+    // CREAR RESERVA (Calculando Precio Inicial)
+    // =========================================================
     public function store()
     {
         $this->authorizeAdmin();
 
-        // 1. Recibimos el ARRAY de servicios desde tu JS
         $data = $_POST;
-        $listaServicios = $data['servicios'] ?? []; // Esto recibe: [1, 5, 8...]
+        $listaServicios = $data['servicios'] ?? [];
 
-        // Validar que haya al menos uno
         if (empty($listaServicios) || empty($data['cliente_id']) || empty($data['estilista_id'])) {
-            // Redirigir con error si faltan datos
             header('Location: ' . BASE_URL . '/index.php?url=Reservation/index&error=missing_data');
             exit;
         }
 
         try {
             $db = \Core\Database::getInstance();
-            $db->beginTransaction(); // Inicia modo seguro
+            $db->beginTransaction();
 
-            // 2. Insertamos la RESERVA (Cabecera)
-            // Guardamos el PRIMER servicio en la columna 'servicio_id' para que el sistema antiguo no falle
+            // 1. CALCULAR PRECIO FINAL (Servicios)
+            // Calculamos cuánto cuestan los servicios seleccionados HOY
+            $precioInicial = $this->calcularTotalServicios($listaServicios);
+
+            // 2. INSERTAR RESERVA
             $servicioPrincipal = $listaServicios[0];
 
-            $sql = "INSERT INTO reserva (usuario_id, estilista_id, servicio_id, fecha_cita, hora_cita, notas, estado) 
-                VALUES (:uid, :eid, :sid, :fecha, :hora, :notas, 'pendiente')";
+            // AGREGAMOS 'precio_final' AL INSERT
+            $sql = "INSERT INTO reserva (usuario_id, estilista_id, servicio_id, fecha_cita, hora_cita, notas, estado, precio_final) 
+                    VALUES (:uid, :eid, :sid, :fecha, :hora, :notas, 'pendiente', :precio)";
 
             $stmt = $db->prepare($sql);
             $stmt->execute([
                 'uid' => $data['cliente_id'],
                 'eid' => $data['estilista_id'],
-                'sid' => $servicioPrincipal, // Fallback para legacy
+                'sid' => $servicioPrincipal,
                 'fecha' => $data['fecha_cita'],
                 'hora' => $data['hora_cita'],
-                'notas' => $data['notas'] ?? ''
+                'notas' => $data['notas'] ?? '',
+                'precio' => $precioInicial // <--- AQUÍ GUARDAMOS EL TOTAL
             ]);
 
-            $reserva_id = $db->lastInsertId(); // Obtenemos el ID creado
+            $reserva_id = $db->lastInsertId();
 
-            // 3. Insertamos LOS DETALLES (El bucle mágico)
+            // 3. INSERTAR DETALLES
             $sqlDetalle = "INSERT INTO reserva_servicio (reserva_id, servicio_id, precio_momento) VALUES (:rid, :sid, :precio)";
             $stmtDetalle = $db->prepare($sqlDetalle);
 
             foreach ($listaServicios as $idServicio) {
-                // Buscamos el precio real de cada servicio para guardarlo
                 $svc = Servicio::find($idServicio);
                 if ($svc) {
                     $stmtDetalle->execute([
@@ -79,10 +81,10 @@ class ReservationController extends Controller
                 }
             }
 
-            $db->commit(); // Confirmar cambios
+            $db->commit();
 
         } catch (\Exception $e) {
-            $db->rollBack(); // Si falla algo, deshacer todo
+            $db->rollBack();
             die("Error: " . $e->getMessage());
         }
 
@@ -90,6 +92,9 @@ class ReservationController extends Controller
         exit;
     }
 
+    // =========================================================
+    // EDITAR RESERVA (Recalculando Precio)
+    // =========================================================
     public function update()
     {
         $this->authorizeAdmin();
@@ -103,18 +108,24 @@ class ReservationController extends Controller
         $reserva = Reserva::find($data['id']);
 
         if ($reserva) {
-            // 1. Actualizar datos principales (usando el método update del modelo que arreglamos antes)
-            // Esto actualiza cliente, estilista, fecha, hora y el servicio_id legacy
+            // 1. Recalcular el nuevo precio de servicios
+            $servicios = $data['servicios'] ?? [];
+            $nuevoPrecioServicios = $this->calcularTotalServicios($servicios);
+
+            // IMPORTANTE: Si la reserva ya tenía productos vendidos, deberíamos sumarlos.
+            // Por simplicidad en edición básica, asumimos que 'update' solo toca servicios.
+            // Si quieres ser muy estricto, deberías sumar $reserva->totalProductos() + $nuevoPrecioServicios.
+            // Por ahora, actualizamos el precio base de la cita.
+            $data['precio_final'] = $nuevoPrecioServicios;
+
+            // 2. Actualizar Reserva (Datos básicos + Precio)
             $reserva->update($data);
 
-            // 2. ACTUALIZAR MÚLTIPLES SERVICIOS
-            // A. Primero borramos los anteriores para evitar duplicados
+            // 3. Actualizar Relación Servicios
             $db = \Core\Database::getInstance();
             $del = $db->prepare("DELETE FROM reserva_servicio WHERE reserva_id = :id");
             $del->execute(['id' => $data['id']]);
 
-            // B. Insertamos los nuevos seleccionados
-            $servicios = $data['servicios'] ?? [];
             if (!empty($servicios)) {
                 foreach ($servicios as $svcId) {
                     $svc = \App\Models\Servicio::find($svcId);
@@ -134,26 +145,157 @@ class ReservationController extends Controller
         exit;
     }
 
-    // Acción para CANCELAR (Anular) o CONFIRMAR
+    // =========================================================
+    // CHECKOUT / VENTA PRODUCTOS (Sumando al Precio Final)
+    // =========================================================
+    public function finalizarVenta()
+    {
+        $this->authorizeAdmin();
+        $data = $_POST;
+
+        if (empty($data['reserva_id']) || empty($data['productos_data'])) {
+            header('Location: ' . BASE_URL . '/index.php?url=Reservation/index&error=missing_data');
+            exit;
+        }
+
+        $productosCarrito = json_decode($data['productos_data'], true);
+
+        // Agrupar cantidades
+        $conteo = [];
+        if (is_array($productosCarrito)) {
+            foreach ($productosCarrito as $item) {
+                if (!isset($conteo[$item['id']]))
+                    $conteo[$item['id']] = 0;
+                $conteo[$item['id']]++;
+            }
+        }
+
+        $db = \Core\Database::getInstance();
+        $db->beginTransaction();
+
+        try {
+            $sqlInsertVenta = "INSERT INTO reserva_producto (reserva_id, producto_id, cantidad, precio_unitario) VALUES (:rid, :pid, :cant, :precio)";
+            $stmtInsertVenta = $db->prepare($sqlInsertVenta);
+
+            $totalVentaProductos = 0; // Acumulador para saber cuánto sumar al total
+
+            foreach ($conteo as $prodId => $cantidadNecesaria) {
+                // Bloqueamos fila para evitar condiciones de carrera en stock
+                $stmt = $db->prepare("SELECT stock, nombre, precio FROM producto WHERE id = :id FOR UPDATE");
+                $stmt->execute(['id' => $prodId]);
+                $prodReal = $stmt->fetch(\PDO::FETCH_OBJ);
+
+                if (!$prodReal || $prodReal->stock < $cantidadNecesaria) {
+                    throw new \Exception("Stock insuficiente para: " . $prodReal->nombre);
+                }
+
+                // Descontar Stock
+                $stmtUpdate = $db->prepare("UPDATE producto SET stock = stock - :cant WHERE id = :id");
+                $stmtUpdate->execute(['cant' => $cantidadNecesaria, 'id' => $prodId]);
+
+                // Guardar Detalle
+                $stmtInsertVenta->execute([
+                    'rid' => $data['reserva_id'],
+                    'pid' => $prodId,
+                    'cant' => $cantidadNecesaria,
+                    'precio' => $prodReal->precio
+                ]);
+
+                // Sumamos al total de esta venta
+                $totalVentaProductos += ($prodReal->precio * $cantidadNecesaria);
+            }
+
+            // --- ACTUALIZAR PRECIO FINAL DE LA RESERVA ---
+            // Sumamos lo que acaban de comprar al precio que ya tenía la reserva
+            // Tambien marcamos como 'completada' y seteamos 'finalizado_en' (Hora fin real)
+            $sqlFinal = "UPDATE reserva 
+                         SET estado = 'completada', 
+                             precio_final = precio_final + :totalProd,
+                             finalizado_en = NOW() 
+                         WHERE id = :id";
+
+            $stmtEstado = $db->prepare($sqlFinal);
+            $stmtEstado->execute([
+                'totalProd' => $totalVentaProductos,
+                'id' => $data['reserva_id']
+            ]);
+            // ---------------------------------------------
+
+            $db->commit();
+            header('Location: ' . BASE_URL . '/index.php?url=Reservation/index&success=checkout_ok');
+            exit;
+
+        } catch (\Exception $e) {
+            $db->rollBack();
+            error_log("Error Checkout: " . $e->getMessage());
+            header('Location: ' . BASE_URL . '/index.php?url=Reservation/index&error=' . urlencode($e->getMessage()));
+            exit;
+        }
+    }
+
+    // =========================================================
+    // CAMBIAR ESTADO (Con lógica de Tiempos completa)
+    // =========================================================
     public function changeStatus()
     {
         $this->authorizeAdmin();
+
         $id = $_GET['id'] ?? null;
         $status = $_GET['status'] ?? 'pendiente';
 
-        // Lista blanca de estados permitidos por seguridad
         $allowed = ['pendiente', 'confirmada', 'en_proceso', 'completada', 'cancelada'];
 
         if ($id && in_array($status, $allowed)) {
-            $reserva = \App\Models\Reserva::find($id);
-            if ($reserva) {
-                $reserva->updateStatus($status);
+
+            $db = \Core\Database::getInstance();
+
+            // Lógica según el estado al que vamos
+            switch ($status) {
+                case 'confirmada':
+                    // Confirmamos la cita
+                    $sql = "UPDATE reserva SET estado = 'confirmada', confirmado_en = NOW() WHERE id = :id";
+                    break;
+
+                case 'en_proceso':
+                    // El cliente se sentó en la silla
+                    $sql = "UPDATE reserva SET estado = 'en_proceso', iniciado_en = NOW() WHERE id = :id";
+                    break;
+
+                case 'cancelada':
+                    // El cliente canceló (o nosotros cancelamos)
+                    $sql = "UPDATE reserva SET estado = 'cancelada', cancelado_en = NOW() WHERE id = :id";
+                    break;
+
+                case 'pendiente':
+                case 'reactivada': // Si usas un botón específico para reactivar
+                    // Reactivación: Volver a pendiente desde cancelada
+                    // Nota: 'reactivado_en' marca cuándo se rescató la cita.
+                    // Opcional: Podrías querer limpiar 'cancelado_en' con NULL si quieres borrar el rastro, 
+                    // pero mejor déjalo para saber que fue cancelada antes.
+                    $sql = "UPDATE reserva SET estado = 'pendiente', reactivado_en = NOW() WHERE id = :id";
+                    break;
+
+                default:
+                    // Cualquier otro cambio simple
+                    $sql = "UPDATE reserva SET estado = :st WHERE id = :id";
+                    // Para este default, necesitamos pasar el :st en el execute
+                    $stmt = $db->prepare($sql);
+                    $stmt->execute(['st' => $status, 'id' => $id]);
+                    // Salimos aquí para no ejecutar el execute de abajo que no lleva :st
+                    header('Location: ' . BASE_URL . '/index.php?url=Reservation/index');
+                    exit;
             }
+
+            // Ejecutar la consulta preparada arriba (para los casos que no son default)
+            $stmt = $db->prepare($sql);
+            $stmt->execute(['id' => $id]);
         }
+
         header('Location: ' . BASE_URL . '/index.php?url=Reservation/index');
         exit;
     }
 
+    // Metodos standard sin cambios mayores...
     public function delete()
     {
         $this->authorizeAdmin();
@@ -166,135 +308,52 @@ class ReservationController extends Controller
         exit;
     }
 
-    // Panel del Cliente: Mis Reservas
     public function my()
     {
-        // 1. Verificar si hay sesión
         if (!isset($_SESSION['user'])) {
             header('Location: ' . BASE_URL . '/index.php?url=Auth/showLogin');
             exit;
         }
-
-        // 2. Obtener ID del usuario logueado
         $userId = $_SESSION['user']['id'];
-
-        // 3. Buscar sus reservas
         $reservas = Reserva::getByUser($userId);
-
-        // 4. Cargar la vista del cliente (crearemos esta carpeta ahora)
         $this->view('client/reservations/my', compact('reservas'));
-    }
-
-    // En app/Controllers/ReservationController.php
-
-    public function finalizarVenta()
-    {
-        $this->authorizeAdmin();
-
-        $data = $_POST;
-
-        // Validación básica
-        if (empty($data['reserva_id']) || empty($data['productos_data'])) {
-            header('Location: ' . BASE_URL . '/index.php?url=Reservation/index&error=missing_data');
-            exit;
-        }
-
-        // Decodificar el JSON del carrito
-        $productosCarrito = json_decode($data['productos_data'], true);
-
-        // 1. AGRUPAR CANTIDADES
-        // Transformamos [ID 5, ID 5, ID 5] en { "5": 3 }
-        $conteo = [];
-        if (is_array($productosCarrito)) {
-            foreach ($productosCarrito as $item) {
-                if (!isset($conteo[$item['id']]))
-                    $conteo[$item['id']] = 0;
-                $conteo[$item['id']]++;
-            }
-        }
-
-        $db = \Core\Database::getInstance();
-        $db->beginTransaction(); // INICIO TRANSACCIÓN
-
-        try {
-            // Preparamos la consulta de inserción una sola vez para usarla en el bucle
-            // Asumo que tienes una tabla 'reserva_producto' para guardar lo que se vendió
-            $sqlInsertVenta = "INSERT INTO reserva_producto (reserva_id, producto_id, cantidad, precio_unitario) 
-                           VALUES (:rid, :pid, :cant, :precio)";
-            $stmtInsertVenta = $db->prepare($sqlInsertVenta);
-
-            // 2. PROCESAR CADA PRODUCTO (Verificar Stock -> Restar -> Guardar Venta)
-            foreach ($conteo as $prodId => $cantidadNecesaria) {
-
-                // A. Buscamos Stock y PRECIO (Importante sacar el precio de la BD por seguridad)
-                $stmt = $db->prepare("SELECT stock, nombre, precio FROM producto WHERE id = :id FOR UPDATE");
-                $stmt->execute(['id' => $prodId]);
-                $prodReal = $stmt->fetch(\PDO::FETCH_OBJ);
-
-                // B. Validación de Stock estricta
-                if (!$prodReal || $prodReal->stock < $cantidadNecesaria) {
-                    throw new \Exception("Stock insuficiente para: " . $prodReal->nombre . ". Disponibles: " . $prodReal->stock);
-                }
-
-                // C. Descontar Stock
-                $stmtUpdate = $db->prepare("UPDATE producto SET stock = stock - :cant WHERE id = :id");
-                $stmtUpdate->execute(['cant' => $cantidadNecesaria, 'id' => $prodId]);
-
-                // D. GUARDAR EL DETALLE DE LA VENTA (Lo que faltaba)
-                $stmtInsertVenta->execute([
-                    'rid' => $data['reserva_id'],
-                    'pid' => $prodId,
-                    'cant' => $cantidadNecesaria,
-                    'precio' => $prodReal->precio // Usamos el precio de la BD, no el del JSON (seguridad)
-                ]);
-            }
-
-            // 3. CAMBIAR ESTADO DE LA RESERVA A "COMPLETADA"
-            $stmtEstado = $db->prepare("UPDATE reserva SET estado = 'completada' WHERE id = :id");
-            $stmtEstado->execute(['id' => $data['reserva_id']]);
-
-            $db->commit(); // CONFIRMAR CAMBIOS
-
-            // Redirigir con éxito
-            header('Location: ' . BASE_URL . '/index.php?url=Reservation/index&success=checkout_ok');
-            exit;
-
-        } catch (\Exception $e) {
-            $db->rollBack(); // DESHACER TODO SI HAY ERROR
-
-            // Puedes redirigir con el error en la URL para mostrarlo en una alerta
-            error_log("Error en Checkout: " . $e->getMessage()); // Guardar en log del servidor
-            header('Location: ' . BASE_URL . '/index.php?url=Reservation/index&error=' . urlencode($e->getMessage()));
-            exit;
-        }
     }
 
     public function ticket()
     {
         $this->authorizeAdmin();
-
         $id = $_GET['id'] ?? null;
         if (!$id) {
             header('Location: ' . BASE_URL . '/index.php?url=Reservation/index');
             exit;
         }
-
         $reserva = Reserva::getByIdWithDetails($id);
-
-        if (!$reserva) {
+        if (!$reserva)
             die("Reserva no encontrada.");
-        }
 
-        // 1. Obtener Servicios (Usando el método estático que creamos antes)
         $servicios = Reserva::getServiciosPorReserva($id);
-
-        // 2. Obtener Productos Vendidos (Usando el método del modelo)
-        // Nota: Asegúrate de tener el método getProductos() en tu modelo Reserva
         $productos = Reserva::getProductosPorReserva($id);
 
-        // 3. Cargar la vista
-        // NOTA: No usamos $this->view() con layout porque queremos una hoja limpia
-        // Hacemos el include directo o usamos una vista sin header/footer
         require_once __DIR__ . '/../views/admin/reservations/ticket.php';
+    }
+
+    // =========================================================
+    // HELPER: Calcular Total Servicios
+    // =========================================================
+    private function calcularTotalServicios($serviciosIds = [])
+    {
+        $total = 0;
+        if (!empty($serviciosIds)) {
+            $db = \Core\Database::getInstance();
+            // Sanitizamos IDs a enteros para evitar inyeccion en IN()
+            $ids = implode(',', array_map('intval', $serviciosIds));
+
+            if (!empty($ids)) {
+                $stmt = $db->query("SELECT SUM(precio) as total FROM servicio WHERE id IN ($ids)");
+                $res = $stmt->fetch(\PDO::FETCH_OBJ);
+                $total = $res->total ?? 0;
+            }
+        }
+        return $total;
     }
 }

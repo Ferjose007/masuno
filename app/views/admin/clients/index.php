@@ -102,6 +102,14 @@
                                                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                 </svg>
                                             </button>
+                                            <button
+                                                onclick="openHistoryModal(<?= $c->id ?>, '<?= htmlspecialchars($c->nombre) ?>')"
+                                                class="text-teal-600 hover:text-teal-900 cursor-pointer" title="Ver Historial">
+                                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </button>
                                             <?php if ($c->activo == 1): ?>
                                                 <button
                                                     onclick="openToggleModal(<?= $c->id ?>, 'desactivar', '<?= htmlspecialchars($c->nombre) ?>')"
@@ -141,6 +149,7 @@
 
     <?php include __DIR__ . '/partials/modal_view.php'; ?>
     <?php include __DIR__ . '/partials/modal_form.php'; ?>
+    <?php include __DIR__ . '/partials/modal_history.php'; ?>
 
     <div id="toggle-modal"
         class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
@@ -205,6 +214,7 @@
             document.getElementById('view-nombre').textContent = data.nombre;
             document.getElementById('view-email').textContent = data.email;
             document.getElementById('view-telefono').textContent = data.telefono || 'No registrado';
+            document.getElementById('view-dni').textContent = data.dni || 'No registrado';
 
             // FOTO: Detectar si existe y mostrarla
             const avatarDiv = document.getElementById('view-avatar');
@@ -269,6 +279,7 @@
                 form.action = `${baseUrl}/index.php?url=Client/store`;
                 form.reset();
                 document.getElementById('client-id').value = '';
+                document.getElementById('client-dni').value = ''; // Limpiar
 
                 // Resetear foto visualmente
                 imgPreview.src = '';
@@ -287,6 +298,7 @@
                 document.getElementById('client-nombre').value = data.nombre;
                 document.getElementById('client-email').value = data.email;
                 document.getElementById('client-telefono').value = data.telefono;
+                document.getElementById('client-dni').value = data.dni || ''; // Llenar (si es null pone vacío)
 
                 // LÓGICA FOTO AL EDITAR
                 if (data.foto && data.foto.trim() !== "") {
@@ -368,6 +380,162 @@
             if (event.target == document.getElementById('delete-modal')) closeDeleteModal();
             if (event.target == document.getElementById('view-modal')) closeViewModal();
             if (event.target == document.getElementById('toggle-modal')) closeToggleModal();
+            if (event.target == document.getElementById('history-modal')) closeHistoryModal();
+            if (event.target == document.getElementById('note-view-modal')) closeNoteView();
+        }
+
+        function openNoteView(text) {
+            const modal = document.getElementById('note-view-modal');
+            const content = document.getElementById('note-content');
+
+            // Inyectamos el texto (respetando saltos de línea si los hubiera)
+            content.innerText = text;
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeNoteView() {
+            document.getElementById('note-view-modal').classList.add('hidden');
+        }
+
+        function openHistoryModal(clientId, clientName) {
+            const modal = document.getElementById('history-modal');
+            const tbody = document.getElementById('history-table-body');
+            const loader = document.getElementById('history-loading');
+            const emptyMsg = document.getElementById('history-empty');
+
+            // Resetear visualización
+            modal.classList.remove('hidden');
+            document.getElementById('history-client-name').textContent = "Cliente: " + clientName;
+            tbody.innerHTML = '';
+            loader.classList.remove('hidden');
+            emptyMsg.classList.add('hidden');
+
+            // Helper para formatear fechas completas (DD/MM/YY HH:mm)
+            const formatFull = (dateStr) => {
+                if (!dateStr) return '';
+                const d = new Date(dateStr);
+                return d.toLocaleDateString('es-PE', {
+                    day: '2-digit', month: '2-digit', year: '2-digit',
+                    hour: '2-digit', minute: '2-digit'
+                });
+            };
+
+            fetch(`${baseUrl}/index.php?url=Client/history&id=${clientId}`)
+                .then(res => res.json())
+                .then(data => {
+                    loader.classList.add('hidden');
+
+                    if (data.error) {
+                        console.error(data.error);
+                        return;
+                    }
+
+                    if (data.length === 0) {
+                        emptyMsg.classList.remove('hidden');
+                        return;
+                    }
+
+                    data.forEach(cita => {
+                        // 1. Badge de Estado
+                        let badgeColor = "bg-gray-100 text-gray-600";
+                        if (cita.estado === 'confirmada') badgeColor = "bg-blue-100 text-blue-700";
+                        if (cita.estado === 'en_proceso') badgeColor = "bg-amber-100 text-amber-700";
+                        if (cita.estado === 'completada') badgeColor = "bg-green-100 text-green-700";
+                        if (cita.estado === 'cancelada') badgeColor = "bg-red-100 text-red-700";
+
+                        // 2. Cronología (Fecha + Hora)
+                        let cronologia = `<div class="text-[10px] leading-tight space-y-1">`;
+
+                        if (cita.creado_en)
+                            cronologia += `<div class="text-gray-400" title="Creado">✨ ${formatFull(cita.creado_en)}</div>`;
+
+                        if (cita.confirmado_en)
+                            cronologia += `<div class="text-blue-600" title="Confirmado">✅ ${formatFull(cita.confirmado_en)}</div>`;
+
+                        if (cita.iniciado_en)
+                            cronologia += `<div class="text-amber-600" title="Iniciado">🚀 ${formatFull(cita.iniciado_en)}</div>`;
+
+                        if (cita.finalizado_en)
+                            cronologia += `<div class="text-green-600 font-bold" title="Finalizado">🏁 ${formatFull(cita.finalizado_en)}</div>`;
+
+                        if (cita.cancelado_en)
+                            cronologia += `<div class="text-red-600 font-bold" title="Cancelado">🚫 ${formatFull(cita.cancelado_en)}</div>`;
+
+                        cronologia += `</div>`;
+
+                        // 3. Consumo (Iconos recuperados)
+                        let consumoHtml = '';
+                        if (cita.servicios_nombres)
+                            consumoHtml += `<div class="text-xs font-medium mb-1"><span class="text-indigo-600">✂️</span> ${cita.servicios_nombres}</div>`;
+
+                        if (cita.productos_nombres)
+                            consumoHtml += `<div class="text-xs text-gray-500"><span class="text-pink-600">🛍️</span> ${cita.productos_nombres}</div>`;
+
+                        // 4. Notas
+                        let notasHtml = '';
+
+                        if (cita.notas && cita.notas.trim() !== "") {
+                            // Limpiamos comillas dobles para que no rompan el HTML attribute
+                            const notaSegura = cita.notas.replace(/"/g, '&quot;');
+
+                            notasHtml = `
+                        <button 
+                            data-note="${notaSegura}" 
+                            onclick="openNoteView(this.dataset.note)"
+                            class="text-indigo-500 hover:text-indigo-700 transition p-1 rounded-full hover:bg-indigo-50" 
+                            title="Ver Nota Completa">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
+                    `;
+                        } else {
+                            notasHtml = '<span class="text-gray-300 text-xs">-</span>';
+                        }
+
+                        // 5. Precio
+                        let precio = parseFloat(cita.precio_final) > 0 ? parseFloat(cita.precio_final) : parseFloat(cita.total_calculado);
+
+                        const row = `
+                        <tr class="hover:bg-gray-50 border-b border-gray-100 transition align-top">
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <div class="font-bold text-gray-800 text-sm">${cita.fecha_cita}</div>
+                                <div class="text-xs text-gray-500">${cita.hora_cita.substring(0, 5)} hrs</div>
+                                <div class="text-xs text-indigo-600 mt-1 font-medium">👩‍🎤 ${cita.estilista || 'Sin asignar'}</div>
+                            </td>
+                            <td class="px-4 py-3 max-w-[200px]">
+                                ${consumoHtml || '<span class="italic text-gray-400 text-xs">Sin datos</span>'}
+                            </td>
+                            <td class="px-4 py-3 text-center text-xs">
+                                ${notasHtml}
+                            </td>
+                            <td class="px-4 py-3">
+                                ${cronologia}
+                            </td>
+                            <td class="px-4 py-3 text-right font-mono text-gray-700 text-sm">
+                                S/. ${precio.toFixed(2)}
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${badgeColor}">
+                                    ${cita.estado}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                        tbody.innerHTML += row;
+                    });
+                })
+                .catch(err => {
+                    console.error(err);
+                    loader.classList.add('hidden');
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500 py-4 text-sm">Error al cargar historial</td></tr>';
+                });
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('history-modal').classList.add('hidden');
         }
     </script>
 </body>

@@ -8,6 +8,7 @@ class User
 {
     public $id;
     public $nombre;
+    public $dni;
     public $email;
     public $password;
     public $telefono;
@@ -61,18 +62,21 @@ class User
     public static function create(array $data)
     {
         $db = Database::getInstance();
-        $stmt = $db->prepare("
-            INSERT INTO usuario (nombre, email, password, telefono, rol, foto, creado_en, activo)
-            VALUES (:nombre, :email, :password, :telefono, :rol, :foto,NOW(), 1)
-        ");
-        return $stmt->execute([
+        $sql = "
+            INSERT INTO usuario (nombre, dni, email, password, telefono, rol, foto, creado_en, activo)
+            VALUES (:nombre, :dni, :email, :password, :telefono, :rol, :foto,NOW(), 1)
+        ";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([
             'nombre' => $data['nombre'],
+            'dni' => $data['dni'],
             'email' => $data['email'],
             'password' => $data['password'],
             'telefono' => $data['telefono'] ?? null,
             'rol' => $data['rol'],
             'foto' => $data['foto'] ?? null
         ]);
+        return $db->lastInsertId();
     }
 
     // 5. Actualizar Usuario
@@ -83,6 +87,7 @@ class User
         $fields = [];
         $params = ['id' => $this->id];
 
+        // 1. Campos obligatorios o principales
         if (!empty($data['nombre'])) {
             $fields[] = "nombre = :nombre";
             $params['nombre'] = $data['nombre'];
@@ -91,27 +96,42 @@ class User
             $fields[] = "email = :email";
             $params['email'] = $data['email'];
         }
-        if (isset($data['telefono'])) {
-            $fields[] = "telefono = :telefono";
-            $params['telefono'] = $data['telefono'];
-        }
         if (!empty($data['password'])) {
             $fields[] = "password = :password";
             $params['password'] = $data['password'];
         }
+
+        // 2. Campos Opcionales (Usamos isset para permitir guardar vacíos si los borran)
+        if (isset($data['telefono'])) {
+            $fields[] = "telefono = :telefono";
+            $params['telefono'] = $data['telefono'];
+        }
+
+        // --- AQUÍ AGREGAMOS EL DNI ---
+        if (isset($data['dni'])) {
+            $fields[] = "dni = :dni";
+            $params['dni'] = $data['dni'];
+        }
+        // -----------------------------
+
         if (!empty($data['foto'])) {
             $fields[] = "foto = :foto";
             $params['foto'] = $data['foto'];
         }
 
-        // Siempre actualizamos la fecha de modificación
+        // 3. Siempre actualizamos la fecha
         $fields[] = "actualizado_en = NOW()";
 
-        if (empty($fields))
+        // Si no hay campos para actualizar, salimos
+        if (empty($fields)) {
             return false;
+        }
 
+        // 4. Ejecución
         $sql = "UPDATE usuario SET " . implode(', ', $fields) . " WHERE id = :id";
         $stmt = $db->prepare($sql);
+
+        // ¡Esta línea faltaba en tu recorte! Es la que guarda los cambios:
         return $stmt->execute($params);
     }
 

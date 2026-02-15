@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 use Core\Controller;
 use App\Models\User;
+use Exception;
 
 class ClientController extends Controller
 {
@@ -165,5 +166,48 @@ class ClientController extends Controller
             }
         }
         return null; // Si no subió nada o falló algo
+    }
+
+    // En ClientController.php
+
+    public function history()
+    {
+        header('Content-Type: application/json');
+        try {
+            $id = $_GET['id'] ?? null;
+            if (!$id)
+                throw new Exception("ID requerido");
+
+            $db = \Core\Database::getInstance();
+
+            $sql = "SELECT 
+                        r.id, r.fecha_cita, r.hora_cita, r.estado, r.notas, r.precio_final,
+                        -- Todas las fechas importantes
+                        r.creado_en, r.confirmado_en, r.iniciado_en, r.finalizado_en, r.cancelado_en, r.reactivado_en,
+                        
+                        u.nombre as estilista,
+                        GROUP_CONCAT(DISTINCT s.nombre SEPARATOR ', ') as servicios_nombres,
+                        GROUP_CONCAT(DISTINCT CONCAT(p.nombre, ' (x', rp.cantidad, ')') SEPARATOR ', ') as productos_nombres,
+                        
+                        (COALESCE(SUM(DISTINCT rs.precio_momento), 0) + COALESCE(SUM(DISTINCT rp.precio_unitario * rp.cantidad), 0)) as total_calculado
+
+                    FROM reserva r
+                    LEFT JOIN usuario u ON r.estilista_id = u.id
+                    LEFT JOIN reserva_servicio rs ON r.id = rs.reserva_id
+                    LEFT JOIN servicio s ON rs.servicio_id = s.id
+                    LEFT JOIN reserva_producto rp ON r.id = rp.reserva_id
+                    LEFT JOIN producto p ON rp.producto_id = p.id
+                    
+                    WHERE r.usuario_id = :id
+                    GROUP BY r.id
+                    ORDER BY r.fecha_cita DESC, r.hora_cita DESC";
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute([':id' => $id]);
+            echo json_encode($stmt->fetchAll(\PDO::FETCH_ASSOC));
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(["error" => $e->getMessage()]);
+        }
     }
 }
