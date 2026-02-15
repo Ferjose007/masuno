@@ -18,6 +18,7 @@ class User
     // --- AGREGA ESTAS DOS LÍNEAS PARA CORREGIR EL ERROR ---
     public $mis_servicios = [];   // Para guardar los IDs (checkboxes)
     public $lista_servicios = []; // Para guardar los objetos (detalles)
+    public $foto;
 
     // 1. Obtener todos los clientes (rol = 'cliente')
     public static function getAllClients()
@@ -61,15 +62,16 @@ class User
     {
         $db = Database::getInstance();
         $stmt = $db->prepare("
-            INSERT INTO usuario (nombre, email, password, telefono, rol, creado_en, activo)
-            VALUES (:nombre, :email, :password, :telefono, :rol, NOW(), 1)
+            INSERT INTO usuario (nombre, email, password, telefono, rol, foto, creado_en, activo)
+            VALUES (:nombre, :email, :password, :telefono, :rol, :foto,NOW(), 1)
         ");
         return $stmt->execute([
-            'nombre'   => $data['nombre'],
-            'email'    => $data['email'],
+            'nombre' => $data['nombre'],
+            'email' => $data['email'],
             'password' => $data['password'],
             'telefono' => $data['telefono'] ?? null,
-            'rol'      => $data['rol']
+            'rol' => $data['rol'],
+            'foto' => $data['foto'] ?? null
         ]);
     }
 
@@ -77,7 +79,7 @@ class User
     public function update(array $data)
     {
         $db = Database::getInstance();
-        
+
         $fields = [];
         $params = ['id' => $this->id];
 
@@ -97,11 +99,16 @@ class User
             $fields[] = "password = :password";
             $params['password'] = $data['password'];
         }
-        
+        if (!empty($data['foto'])) {
+            $fields[] = "foto = :foto";
+            $params['foto'] = $data['foto'];
+        }
+
         // Siempre actualizamos la fecha de modificación
         $fields[] = "actualizado_en = NOW()";
 
-        if (empty($fields)) return false;
+        if (empty($fields))
+            return false;
 
         $sql = "UPDATE usuario SET " . implode(', ', $fields) . " WHERE id = :id";
         $stmt = $db->prepare($sql);
@@ -121,16 +128,17 @@ class User
     {
         $db = Database::getInstance();
         $nuevoEstado = $this->activo == 1 ? 0 : 1;
-        
+
         $stmt = $db->prepare("UPDATE usuario SET activo = :activo, actualizado_en = NOW() WHERE id = :id");
         return $stmt->execute([
             'activo' => $nuevoEstado,
-            'id'     => $this->id
+            'id' => $this->id
         ]);
     }
-    
+
     // 8. Contar por roles (Para el Dashboard)
-    public static function countByRole($role) {
+    public static function countByRole($role)
+    {
         $db = Database::getInstance();
         $stmt = $db->prepare("SELECT COUNT(*) as total FROM usuario WHERE rol = :rol");
         $stmt->execute([':rol' => $role]);
@@ -144,7 +152,7 @@ class User
     public static function syncServices($userId, array $serviceIds)
     {
         $db = Database::getInstance();
-        
+
         // A. Primero borramos las relaciones anteriores de este usuario
         $stmt = $db->prepare("DELETE FROM estilista_servicio WHERE usuario_id = :uid");
         $stmt->execute(['uid' => $userId]);
@@ -154,13 +162,13 @@ class User
             $sql = "INSERT INTO estilista_servicio (usuario_id, servicio_id) VALUES ";
             $values = [];
             $params = [];
-            
+
             foreach ($serviceIds as $srvId) {
                 $values[] = "(?, ?)";
                 $params[] = $userId;
                 $params[] = $srvId;
             }
-            
+
             $sql .= implode(", ", $values);
             $stmt = $db->prepare($sql);
             $stmt->execute($params);
@@ -176,7 +184,7 @@ class User
         // Devuelve un array simple: [1, 5, 8]
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
-    
+
     // 3. Obtener los Servicios completos (con nombres) de un estilista (opcional, para mostrar detalles)
     public static function getServicesObj($userId)
     {
