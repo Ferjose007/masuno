@@ -9,60 +9,53 @@ class Reserva
 {
     public $id;
     public $usuario_id;
-    public $estilista_id;
-    public $servicio_id;
-    public $horario_id; // Ahora puede ser null
+    // public $estilista_id; <- Ya no usaremos este campo principal
+    // public $servicio_id;  <- Tampoco este
+    public $horario_id;
     public $fecha_cita;
     public $hora_cita;
     public $estado;
     public $notas;
     public $creado_en;
 
-    // Propiedades virtuales (para mostrar nombres en la lista)
+    // Propiedades virtuales
     public $cliente_nombre;
     public $cliente_email;
     public $servicio_nombre;
     public $servicio_precio;
     public $servicio_duracion;
+    public $estilistas_nombres; // NUEVO: Para guardar varios estilistas
 
     public static function all()
     {
         $db = Database::getInstance();
 
-        // ATENCIÓN AL SQL: Usamos GROUP_CONCAT
+        // NUEVO: La consulta ahora busca a los estilistas en la tabla reserva_servicio
         $sql = "SELECT 
                 r.*, 
-                
-                -- Alias para JS
                 r.usuario_id AS cliente_id,  
-                
-                -- Datos Clientes y Estilistas
                 c.nombre AS cliente_nombre, 
-                e.nombre AS estilista_nombre,
                 
-                -- MAGIA AQUÍ: Concatenamos todos los servicios de esta reserva
-                -- Resultado ejemplo: 'Corte, Barba, Masaje'
-                GROUP_CONCAT(s.nombre SEPARATOR ', ') AS servicios_nombres,
+                -- MAGIA AQUÍ: Concatenamos los servicios y también los estilistas involucrados
+                GROUP_CONCAT(DISTINCT s.nombre SEPARATOR ', ') AS servicios_nombres,
+                GROUP_CONCAT(DISTINCT s.id) AS servicios_ids,
                 
-                -- También necesitamos los IDs para el Modal de Editar
-                -- Resultado ejemplo: '1,5,8'
-                GROUP_CONCAT(s.id) AS servicios_ids,
+                -- Extraemos los estilistas de la tabla pivote (Si es null, pone 'Sin asignar')
+                GROUP_CONCAT(DISTINCT COALESCE(e.nombre, 'Sin asignar') SEPARATOR ', ') AS estilistas_nombres,
                 
-                -- Sumamos el precio total de todos los servicios
                 SUM(s.precio) AS precio_total_estimado
                 
             FROM reserva r
             LEFT JOIN usuario c ON r.usuario_id = c.id
-            LEFT JOIN usuario e ON r.estilista_id = e.id
             
             -- JOIN a la tabla intermedia
             LEFT JOIN reserva_servicio rs ON r.id = rs.reserva_id
             -- JOIN a servicios
             LEFT JOIN servicio s ON rs.servicio_id = s.id
+            -- NUEVO: JOIN a los estilistas desde la tabla pivote
+            LEFT JOIN usuario e ON rs.estilista_id = e.id
             
-            -- AGRUPAR: Importante para que no salgan filas repetidas
             GROUP BY r.id
-            
             ORDER BY r.fecha_cita DESC, r.hora_cita DESC";
 
         $stmt = $db->query($sql);
@@ -72,10 +65,10 @@ class Reserva
     public static function find($id)
     {
         $db = Database::getInstance();
-        $sql = "SELECT r.*, u.nombre as cliente_nombre, s.nombre as servicio_nombre 
+        // NOTA: Esta función base se mantiene sencilla, la magia pesada la hace getByIdWithDetails
+        $sql = "SELECT r.*, u.nombre as cliente_nombre 
                 FROM reserva r
                 JOIN usuario u ON r.usuario_id = u.id
-                JOIN servicio s ON r.servicio_id = s.id
                 WHERE r.id = :id";
         $stmt = $db->prepare($sql);
         $stmt->execute(['id' => $id]);
@@ -86,38 +79,34 @@ class Reserva
     public static function create(array $data)
     {
         $db = Database::getInstance();
-        // Nota: Insertamos horario_id como NULL si no viene definido
+        // NUEVO: Quitamos servicio_id y estilista_id de la inserción principal.
+        // Ahora devuelve el ID insertado para que el Controlador guarde los detalles
         $stmt = $db->prepare("
-            INSERT INTO reserva (usuario_id, servicio_id, horario_id, fecha_cita, hora_cita, notas, estado, creado_en)
-            VALUES (:cliente, :servicio, NULL, :fecha, :hora, :notas, 'pendiente', NOW())
+            INSERT INTO reserva (usuario_id, horario_id, fecha_cita, hora_cita, notas, estado, creado_en)
+            VALUES (:cliente, NULL, :fecha, :hora, :notas, 'pendiente', NOW())
         ");
-        return $stmt->execute([
+
+        $exito = $stmt->execute([
             'cliente' => $data['usuario_id'],
-            'servicio' => $data['servicio_id'],
             'fecha' => $data['fecha_cita'],
             'hora' => $data['hora_cita'],
             'notas' => $data['notas'] ?? null
         ]);
+
+        if ($exito) {
+            return $db->lastInsertId(); // Devolvemos el ID de la reserva creada
+        }
+        return false;
     }
 
     public function update($data)
     {
         $db = Database::getInstance();
-
-        // 1. Mapeo inteligente: Si viene 'cliente_id', lo pasamos a 'usuario_id'
         $usuario_id = $data['usuario_id'] ?? $data['cliente_id'];
 
-        // 2. Manejo de servicio: Si viene un array, tomamos el primero como principal
-        // Esto evita el error "Column cannot be null"
-        $servicio_id = $data['servicio_id'] ?? null;
-        if (isset($data['servicios']) && is_array($data['servicios']) && count($data['servicios']) > 0) {
-            $servicio_id = $data['servicios'][0];
-        }
-
+        // NUEVO: Solo actualizamos los datos generales de la reserva
         $sql = "UPDATE reserva SET 
                     usuario_id = :usuario_id,
-                    estilista_id = :estilista_id, 
-                    servicio_id = :servicio_id,
                     fecha_cita = :fecha_cita,
                     hora_cita = :hora_cita,
                     notas = :notas
@@ -125,11 +114,8 @@ class Reserva
 
         $stmt = $db->prepare($sql);
 
-        // Ejecutamos pasando los valores limpios
         return $stmt->execute([
             'usuario_id' => $usuario_id,
-            'estilista_id' => $data['estilista_id'], // Asegúrate que el form envíe esto
-            'servicio_id' => $servicio_id,
             'fecha_cita' => $data['fecha_cita'],
             'hora_cita' => $data['hora_cita'],
             'notas' => $data['notas'] ?? '',
@@ -137,6 +123,7 @@ class Reserva
         ]);
     }
 
+    // ... (Mantengo updateStatus, changeStatus, delete, countToday, sumDailyRevenue iguales) ...
     public function changeStatus($nuevoEstado)
     {
         $db = Database::getInstance();
@@ -149,12 +136,7 @@ class Reserva
         $db = Database::getInstance();
         $sql = "UPDATE reserva SET estado = :estado WHERE id = :id";
         $stmt = $db->prepare($sql);
-        $stmt->execute([
-            'estado' => $status,
-            'id' => $this->id
-        ]);
-
-        // Actualizamos la propiedad del objeto actual también
+        $stmt->execute(['estado' => $status, 'id' => $this->id]);
         $this->estado = $status;
     }
 
@@ -165,33 +147,28 @@ class Reserva
         return $stmt->execute(['id' => $this->id]);
     }
 
-    // Métodos para estadísticas (Dashboard) corregidos
     public static function countToday()
     {
         $db = Database::getInstance();
         $today = date('Y-m-d');
-        // Ahora usamos fecha_cita directo de la tabla reserva
         $stmt = $db->prepare("SELECT COUNT(*) as total FROM reserva WHERE fecha_cita = :today AND estado != 'cancelada'");
         $stmt->execute([':today' => $today]);
         $res = $stmt->fetch(PDO::FETCH_ASSOC);
         return $res['total'] ?? 0;
     }
 
-    // Calcular ingresos SOLO de HOY y SOLO de citas COMPLETADAS
     public static function sumDailyRevenue()
     {
         $db = Database::getInstance();
         $today = date('Y-m-d');
-
         $sql = "SELECT SUM(s.precio) as revenue 
                 FROM reserva r 
-                JOIN servicio s ON r.servicio_id = s.id
+                JOIN reserva_servicio rs ON r.id = rs.reserva_id
+                JOIN servicio s ON rs.servicio_id = s.id
                 WHERE r.fecha_cita = :today AND r.estado = 'completada'";
-
         $stmt = $db->prepare($sql);
         $stmt->execute([':today' => $today]);
         $res = $stmt->fetch(PDO::FETCH_ASSOC);
-
         return $res['revenue'] ?? 0;
     }
 
@@ -199,68 +176,61 @@ class Reserva
     {
         $db = Database::getInstance();
         $today = date('Y-m-d');
-
-        // CORRECCIÓN: Quitamos los alias "as fecha" y "as hora_inicio"
-        // Ahora usamos los nombres reales de la tabla y la clase.
-        $sql = "SELECT r.id, r.estado, u.nombre as cliente_nombre, s.nombre as servicio_nombre, r.fecha_cita, r.hora_cita
+        // Usamos GROUP_CONCAT también aquí por si hay múltiples servicios
+        $sql = "SELECT r.id, r.estado, u.nombre as cliente_nombre, r.fecha_cita, r.hora_cita,
+                       GROUP_CONCAT(s.nombre SEPARATOR ', ') as servicio_nombre
                 FROM reserva r 
                 JOIN usuario u ON r.usuario_id = u.id 
-                JOIN servicio s ON r.servicio_id = s.id 
+                LEFT JOIN reserva_servicio rs ON r.id = rs.reserva_id
+                LEFT JOIN servicio s ON rs.servicio_id = s.id 
                 WHERE r.fecha_cita >= :today AND r.estado != 'cancelada'
+                GROUP BY r.id
                 ORDER BY r.fecha_cita ASC, r.hora_cita ASC 
                 LIMIT " . (int) $limit;
-
         $stmt = $db->prepare($sql);
         $stmt->execute([':today' => $today]);
         return $stmt->fetchAll(PDO::FETCH_CLASS, self::class);
     }
 
-    // Obtener reservas de un usuario específico (Para el panel del cliente)
     public static function getByUser($userId)
     {
         $db = Database::getInstance();
-        $sql = "SELECT r.*, s.nombre as servicio_nombre, s.precio as servicio_precio, s.duracion_minutes 
+        $sql = "SELECT r.*, 
+                       GROUP_CONCAT(s.nombre SEPARATOR ', ') as servicio_nombre, 
+                       SUM(s.precio) as servicio_precio
                 FROM reserva r
-                JOIN servicio s ON r.servicio_id = s.id
+                LEFT JOIN reserva_servicio rs ON r.id = rs.reserva_id
+                LEFT JOIN servicio s ON rs.servicio_id = s.id
                 WHERE r.usuario_id = :id
+                GROUP BY r.id
                 ORDER BY r.fecha_cita DESC, r.hora_cita DESC";
-
         $stmt = $db->prepare($sql);
         $stmt->execute(['id' => $userId]);
         return $stmt->fetchAll(PDO::FETCH_CLASS, self::class);
     }
 
-    // Función para agregar productos a la venta
     public function guardarProductos($productos)
     {
         $db = Database::getInstance();
-
         foreach ($productos as $prod) {
-            // A. Insertar en tabla intermedia (reserva_producto)
-            // Asegúrate de que esta tabla exista en tu BD
             $sql = "INSERT INTO reserva_producto (reserva_id, producto_id, cantidad, precio_unitario) 
                     VALUES (:reserva_id, :producto_id, :cantidad, :precio)";
             $stmt = $db->prepare($sql);
             $stmt->execute([
                 'reserva_id' => $this->id,
                 'producto_id' => $prod['id'],
-                'cantidad' => 1, // Por defecto 1 en este flujo simple
+                'cantidad' => 1,
                 'precio' => $prod['precio']
             ]);
-
-            // B. Descontar Stock del inventario
             $sqlStock = "UPDATE producto SET stock = stock - 1 WHERE id = :id";
             $stmtStock = $db->prepare($sqlStock);
             $stmtStock->execute(['id' => $prod['id']]);
         }
     }
 
-    // Función para obtener el detalle de productos de una reserva (Para la boleta)
-    // CAMBIO: Ahora es 'public static' y pide el '$id'
     public static function getProductosPorReserva($id)
     {
         $db = Database::getInstance();
-        // Hacemos JOIN para traer el nombre del producto
         $sql = "SELECT rp.*, p.nombre 
                 FROM reserva_producto rp
                 JOIN producto p ON rp.producto_id = p.id
@@ -270,30 +240,51 @@ class Reserva
         return $stmt->fetchAll(\PDO::FETCH_OBJ);
     }
 
-    // CAMBIO: Ahora es 'public static' y pide el '$id' por parámetro
+    // ========================================================
+    // NUEVO: FUNCIONES CLAVES PARA EL NUEVO FLUJO DE SERVICIOS
+    // ========================================================
+
+    // Ahora recupera el servicio Y QUIÉN lo realizó
     public static function getServiciosPorReserva($id)
     {
         $db = Database::getInstance();
-        $sql = "SELECT s.id, s.nombre, s.precio 
+        $sql = "SELECT s.id, s.nombre, s.precio, 
+                       rs.estilista_id, e.nombre AS estilista_nombre 
                 FROM reserva_servicio rs
                 JOIN servicio s ON rs.servicio_id = s.id
+                LEFT JOIN usuario e ON rs.estilista_id = e.id
                 WHERE rs.reserva_id = :id";
         $stmt = $db->prepare($sql);
         $stmt->execute(['id' => $id]);
         return $stmt->fetchAll(\PDO::FETCH_OBJ);
     }
 
-    // Obtener una reserva por ID con los nombres de Cliente y Estilista
+    // NUEVO: Función para que el controlador asigne servicios a una reserva
+    public static function syncServicios($reserva_id, $servicios)
+    {
+        $db = Database::getInstance();
+
+        // Primero, limpiamos los servicios actuales para esta reserva (útil al editar)
+        $db->prepare("DELETE FROM reserva_servicio WHERE reserva_id = ?")->execute([$reserva_id]);
+
+        $sql = "INSERT INTO reserva_servicio (reserva_id, servicio_id, estilista_id) VALUES (?, ?, ?)";
+        $stmt = $db->prepare($sql);
+
+        // $servicios debe ser un array como: [['servicio_id' => 1, 'estilista_id' => 2], ...]
+        foreach ($servicios as $item) {
+            $est_id = !empty($item['estilista_id']) ? $item['estilista_id'] : null;
+            $stmt->execute([$reserva_id, $item['servicio_id'], $est_id]);
+        }
+    }
+
     public static function getByIdWithDetails($id)
     {
         $db = Database::getInstance();
         $sql = "SELECT r.*, 
                        c.nombre AS cliente_nombre, 
-                       c.email AS cliente_email,
-                       e.nombre AS estilista_nombre
+                       c.email AS cliente_email
                 FROM reserva r
                 LEFT JOIN usuario c ON r.usuario_id = c.id
-                LEFT JOIN usuario e ON r.estilista_id = e.id
                 WHERE r.id = :id";
 
         $stmt = $db->prepare($sql);
@@ -301,4 +292,3 @@ class Reserva
         return $stmt->fetch(\PDO::FETCH_OBJ);
     }
 }
-

@@ -146,19 +146,19 @@ class ReservationController extends Controller
     }
 
     // =========================================================
-    // CHECKOUT / VENTA PRODUCTOS (Sumando al Precio Final)
+    // CHECKOUT / VENTA PRODUCTOS + FACTURACIÓN ELECTRÓNICA
     // =========================================================
     public function finalizarVenta()
     {
         $this->authorizeAdmin();
         $data = $_POST;
 
-        if (empty($data['reserva_id']) || empty($data['productos_data'])) {
+        if (empty($data['reserva_id'])) {
             header('Location: ' . BASE_URL . '/index.php?url=Reservation/index&error=missing_data');
             exit;
         }
 
-        $productosCarrito = json_decode($data['productos_data'], true);
+        $productosCarrito = !empty($data['productos_data']) ? json_decode($data['productos_data'], true) : [];
 
         // Agrupar cantidades
         $conteo = [];
@@ -177,7 +177,8 @@ class ReservationController extends Controller
             $sqlInsertVenta = "INSERT INTO reserva_producto (reserva_id, producto_id, cantidad, precio_unitario) VALUES (:rid, :pid, :cant, :precio)";
             $stmtInsertVenta = $db->prepare($sqlInsertVenta);
 
-            $totalVentaProductos = 0; // Acumulador para saber cuánto sumar al total
+            $totalVentaProductos = 0;
+            $productosParaSunat = []; // <-- ARREGLO PARA GREENTER
 
             foreach ($conteo as $prodId => $cantidadNecesaria) {
                 // Bloqueamos fila para evitar condiciones de carrera en stock
@@ -201,13 +202,18 @@ class ReservationController extends Controller
                     'precio' => $prodReal->precio
                 ]);
 
-                // Sumamos al total de esta venta
                 $totalVentaProductos += ($prodReal->precio * $cantidadNecesaria);
+
+                // Llenamos los datos para enviar a SUNAT
+                $productosParaSunat[] = [
+                    'id' => $prodId,
+                    'nombre' => $prodReal->nombre,
+                    'precio' => $prodReal->precio,
+                    'cantidad' => $cantidadNecesaria
+                ];
             }
 
             // --- ACTUALIZAR PRECIO FINAL DE LA RESERVA ---
-            // Sumamos lo que acaban de comprar al precio que ya tenía la reserva
-            // Tambien marcamos como 'completada' y seteamos 'finalizado_en' (Hora fin real)
             $sqlFinal = "UPDATE reserva 
                          SET estado = 'completada', 
                              precio_final = precio_final + :totalProd,
@@ -219,9 +225,79 @@ class ReservationController extends Controller
                 'totalProd' => $totalVentaProductos,
                 'id' => $data['reserva_id']
             ]);
-            // ---------------------------------------------
 
-            $db->commit();
+            $db->commit(); // VENTA GUARDADA CON ÉXITO
+
+            // =======================================================
+            // 🚀 INICIO DE FACTURACIÓN ELECTRÓNICA (GREENTER)
+            // =======================================================
+            try {
+                $res_id = $data['reserva_id'];
+
+                // 1. Obtener Datos del Cliente (Usando JOIN a la reserva)
+                $stmtCli = $db->prepare("SELECT u.nombre, u.dni FROM reserva r JOIN usuario u ON r.usuario_id = u.id WHERE r.id = ?");
+                $stmtCli->execute([$res_id]);
+                $clienteBD = $stmtCli->fetch(\PDO::FETCH_ASSOC);
+
+                $clienteSunat = [
+                    'dni' => !empty($clienteBD['dni']) ? $clienteBD['dni'] : '00000000',
+                    'nombre' => !empty($clienteBD['nombre']) ? $clienteBD['nombre'] : 'CLIENTE VARIOS'
+                ];
+
+                // 2. Obtener los Servicios que se hizo en la reserva
+                $stmtServ = $db->prepare("SELECT s.id, s.nombre, rs.precio_momento as precio 
+                                          FROM reserva_servicio rs 
+                                          JOIN servicio s ON rs.servicio_id = s.id 
+                                          WHERE rs.reserva_id = ?");
+                $stmtServ->execute([$res_id]);
+                $serviciosParaSunat = $stmtServ->fetchAll(\PDO::FETCH_ASSOC);
+
+                // 3. Obtener el Siguiente Correlativo
+                $stmtCorr = $db->query("SELECT COALESCE(MAX(correlativo), 0) + 1 FROM comprobantes WHERE serie = 'B001'");
+                $siguienteCorrelativo = $stmtCorr->fetchColumn();
+
+                // 4. Emitir Boleta
+                $sunatService = new \App\Services\SunatService();
+                $resultadoSunat = $sunatService->emitirBoleta(
+                    $clienteSunat,
+                    $serviciosParaSunat,
+                    $productosParaSunat,
+                    $siguienteCorrelativo
+                );
+
+                // 5. Guardar Comprobante en la Base de Datos
+                if ($resultadoSunat['exito']) {
+                    $sqlC = "INSERT INTO comprobantes 
+                        (reserva_id, tipo_comprobante, serie, correlativo, cliente_tipo_doc, cliente_num_doc, cliente_nombre, 
+                        total_gravada, total_igv, total_total, estado_sunat, mensaje_sunat, hash_cpe, xml_path, cdr_path) 
+                        VALUES (?, '03', 'B001', ?, '1', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    $db->prepare($sqlC)->execute([
+                        $res_id,
+                        $siguienteCorrelativo,
+                        $clienteSunat['dni'],
+                        $clienteSunat['nombre'],
+                        $resultadoSunat['totales']['gravada'],
+                        $resultadoSunat['totales']['igv'],
+                        $resultadoSunat['totales']['total'],
+                        $resultadoSunat['estado_sunat'],
+                        $resultadoSunat['mensaje'],
+                        $resultadoSunat['hash_cpe'],
+                        $resultadoSunat['ruta_xml'],
+                        $resultadoSunat['ruta_cdr']
+                    ]);
+                } else {
+                    // Temporal: Forzar que nos muestre el error de SUNAT en pantalla
+                    die("<h2 style='color:red;'>❌ ERROR DE SUNAT: " . $resultadoSunat['mensaje'] . "</h2>");
+                }
+
+            } catch (\Exception $eFactura) {
+                // Temporal: Forzar que nos muestre el error de código en pantalla
+                die("<h2 style='color:red;'>❌ ERROR DE CÓDIGO/SERVIDOR: " . $eFactura->getMessage() . "</h2><br>Archivo: " . $eFactura->getFile() . " (Línea: " . $eFactura->getLine() . ")");
+            }
+            // =======================================================
+            // FIN DE FACTURACIÓN ELECTRÓNICA
+            // =======================================================
+
             header('Location: ' . BASE_URL . '/index.php?url=Reservation/index&success=checkout_ok');
             exit;
 

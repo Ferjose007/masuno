@@ -12,7 +12,15 @@ session_start();
 // Ajusta esto si tu carpeta se llama diferente a 'masuno'
 define('BASE_URL', 'http://localhost/masuno/public');
 
-// 4. Autocarga de clases (Para que funcionen los 'use')
+
+// ==========================================
+// --- AQUÍ VA EL AUTOLOAD DE COMPOSER ---
+// Carga todas las librerías externas (Greenter)
+require_once __DIR__ . '/../vendor/autoload.php';
+// ==========================================
+
+
+// 4. Autocarga de clases (Para que funcionen tus 'use' internos de App y Core)
 spl_autoload_register(function ($class) {
     // Convierte los namespaces (App\Models\User) en rutas (../app/Models/User.php)
     $prefix = '';
